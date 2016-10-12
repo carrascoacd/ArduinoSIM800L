@@ -30,13 +30,13 @@
 
 #include "sim800.h"
 
-void SIM800::preInit(void)
+int SIM800::preInit(void)
 {
     pinMode(SIM800_POWER_STATUS,INPUT);
     delay(10);
     if(LOW == digitalRead(SIM800_POWER_STATUS))
     {
-        if(sendATTest() != 0)
+        if(sendATTest() == FALSE)
         {
             delay(800);
             digitalWrite(powerPin,HIGH);
@@ -46,12 +46,12 @@ void SIM800::preInit(void)
             digitalWrite(powerPin,HIGH);
             delay(3000);  
         }
-        while(sendATTest() != 0);                
-        Serial.println("Init O.K!");         
+        while(sendATTest() == FALSE);                
+        return TRUE;        
     }
     else
     {
-        Serial.println("Power check failed!");  
+        return FALSE;
     }
 }
 
@@ -60,15 +60,14 @@ int SIM800::checkReadable(void)
     return serialSIM800.available();
 }
 
-int SIM800::readBuffer(char *buffer,int count, unsigned int timeOut)
+int SIM800::readBuffer(char *buffer, int count, unsigned int timeOut)
 {
     int i = 0;
     unsigned long timerStart,timerEnd;
     timerStart = millis();
     while(1) {
         while (serialSIM800.available()) {
-            char c = serialSIM800.read();
-            // if (c == '\r' || c == '\n') c = '$';                            
+            char c = serialSIM800.read();                        
             buffer[i] = c;
             buffer[i + 1] = '\0';
             ++i;
@@ -81,10 +80,10 @@ int SIM800::readBuffer(char *buffer,int count, unsigned int timeOut)
         }
     }
     delay(500);
-    while(serialSIM800.available()) {   // display the other thing..
+    while(serialSIM800.available()) {
         serialSIM800.read();
     }
-    return 0;
+    return TRUE;
 }
 
 void SIM800::cleanBuffer(char *buffer, int count)
@@ -120,7 +119,7 @@ int SIM800::waitForResp(const char *resp, unsigned int timeout)
         }
         timerEnd = millis();
         if(timerEnd - timerStart > 1000 * timeout) {
-            return -1;
+            return FALSE;
         }
     }
 
@@ -128,7 +127,7 @@ int SIM800::waitForResp(const char *resp, unsigned int timeout)
         serialSIM800.read();
     }
 
-    return 0;
+    return TRUE;
 }
 
 void SIM800::sendEndMark(void)

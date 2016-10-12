@@ -74,7 +74,7 @@ public:
     
     /** Power on SIM800
      */
-    void preInit(void);
+    int preInit(void);
     
     /** Check if SIM800 readable
      */
@@ -85,8 +85,8 @@ public:
      *  @param  count   the maximal bytes number read from SIM800 module
      *  @param  timeOut time to wait for reading from SIM800 module 
      *  @returns
-     *      0 on success
-     *      -1 on error
+     *      TRUE on success
+     *      ERROR on error
      */
     int readBuffer(char* buffer,int count, unsigned int timeOut = DEFAULT_TIMEOUT);
 
@@ -114,8 +114,8 @@ public:
      *  @param  *resp   correct response which SIM800 module will return
      *  @param  *timeout    waiting seconds till timeout
      *  @returns
-     *      0 on success
-     *      -1 on error
+     *      TRUE on success
+     *      ERROR on error
      */ 
     int waitForResp(const char* resp, unsigned timeout);
 
@@ -124,8 +124,8 @@ public:
      *  @param  *resp   correct response which GPRS module will return
      *  @param  *timeout    waiting seconds till timeout
      *  @returns
-     *      0 on success
-     *      -1 on error
+     *      TRUE on success
+     *      ERROR on error
      */
     int sendCmdAndWaitForResp(const char* cmd, const char *resp, unsigned timeout);
 
