@@ -8,9 +8,13 @@ const char *HTTP_INIT = "AT+HTTPINIT\n";
 const char *HTTP_CID = "AT+HTTPPARA=\"CID\",1\n";
 const char *HTTP_PARA = "AT+HTTPPARA=\"URL\",\"%s\"\n";
 const char *HTTP_GET = "AT+HTTPACTION=0\n";
+const char *HTTP_POST = "AT+HTTPACTION=1\n";
+const char *HTTP_DATA = "AT+HTTPDATA=%d,%d\n";
 const char *HTTP_READ = "AT+HTTPREAD\n";
 const char *HTTP_CLOSE = "AT+HTTPTERM\n";
+const char *HTTP_CONTENT = "AT+HTTPPARA=\"CONTENT\",\"application/json\"\n";
 const char *OK = "OK";
+const char *DOWNLOAD = "DOWNLOAD";
 const char *HTTP_200 = ",200,";
 
 Result HTTP::configureBearer(const char *apn){
@@ -49,29 +53,41 @@ Result HTTP::disconnect() {
   return result;
 }
 
-Result HTTP::get(const char *url, char *response) {
+Result HTTP::post(const char *uri, const char *body, char *response) {
 
-  Result result = SUCCESS;
+  Result result = setHTTPSession(uri);
 
-  if (sendCmdAndWaitForResp(HTTP_CID, OK, 2000) == FALSE)
-    result = ERROR_HTTP_CID;
+  if (sendCmdAndWaitForResp(HTTP_CONTENT, OK, 5000) == FALSE)
+    result = ERROR_HTTP_CONTENT;
 
-  char httpPara[512];
-  sprintf(httpPara, HTTP_PARA, url);
+  char httpData[128];
+  int delayToDownload = 5000;
+  sprintf(httpData, HTTP_DATA, strlen(body), delayToDownload);
+  if (sendCmdAndWaitForResp(httpData, DOWNLOAD, 5000) == FALSE){
+    result = ERROR_HTTP_DATA;
+  }
 
-  if (sendCmdAndWaitForResp(httpPara, OK, 2000) == FALSE)
-    result = ERROR_HTTP_PARA;
+  sendCmd(body);
+  delay(delayToDownload);
+
+  if (sendCmdAndWaitForResp(HTTP_POST, HTTP_200, 5000) == TRUE) {
+    sendCmd(HTTP_READ);
+    result = SUCCESS;
+    readResponse(response);
+  }
+  else {
+    result = ERROR_HTTP_POST;
+  }
+}
+
+Result HTTP::get(const char *uri, char *response) {
+
+  Result result = setHTTPSession(uri);
   
   if (sendCmdAndWaitForResp(HTTP_GET, HTTP_200, 5000) == TRUE) {
     sendCmd(HTTP_READ);
     result = SUCCESS;
-
-    char buffer[256];
-    cleanBuffer(buffer, sizeof(buffer));
-    if (readBuffer(buffer, sizeof(buffer)) == TRUE){
-      parseJSONResponse(buffer, response, sizeof(buffer));
-    }
-
+    readResponse(response);
   }
   else {
     result = ERROR_HTTP_GET;
@@ -80,9 +96,33 @@ Result HTTP::get(const char *url, char *response) {
   return result;
 }
 
-void HTTP::parseJSONResponse(const char *buffer, char *response, unsigned int bufferSize){
+Result HTTP::setHTTPSession(const char *uri){
 
+  Result result;
+  if (sendCmdAndWaitForResp(HTTP_CID, OK, 2000) == FALSE)
+    result = ERROR_HTTP_CID;
+
+  char httpPara[512];
+  sprintf(httpPara, HTTP_PARA, uri);
+
+  if (sendCmdAndWaitForResp(httpPara, OK, 2000) == FALSE)
+    result = ERROR_HTTP_PARA;
+
+  return result;
+}
+
+void HTTP::readResponse(char *response){
+  
+  char buffer[256];  
+  cleanBuffer(buffer, sizeof(buffer));
   cleanBuffer(response, sizeof(response));
+
+  if (readBuffer(buffer, sizeof(buffer)) == TRUE){
+    parseJSONResponse(buffer, sizeof(buffer), response);
+  }
+}
+
+void HTTP::parseJSONResponse(const char *buffer, unsigned int bufferSize, char *response){
 
   int start_index = 0;
   int i = 0;

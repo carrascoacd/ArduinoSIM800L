@@ -1,8 +1,8 @@
 #include "sim800.h"
 #include <string.h>
+#include <ArduinoJson.h>
 
-/* Error codes */
-
+/* Result codes */
 enum Result {
   SUCCESS,
   ERROR_BEARER_PROFILE_GPRS,
@@ -16,7 +16,9 @@ enum Result {
   ERROR_HTTP_GET,
   ERROR_HTTP_READ,
   ERROR_HTTP_CLOSE,
-  ERROR_NOT_REACHABLE
+  ERROR_HTTP_POST,
+  ERROR_HTTP_DATA,
+  ERROR_HTTP_CONTENT
 };
 
 
@@ -27,7 +29,11 @@ class HTTP : public SIM800 {
     Result configureBearer(const char *apn);
     Result connect();
     Result disconnect();
-    Result get(const char *url, char *response);
+    Result get(const char *uri, char *response);
+    Result post(const char *uri, const char *body, char *response);
 
-    void parseJSONResponse(const char *buffer, char *response, unsigned int bufferSize);
+  private:
+    void readResponse(char *response);
+    Result setHTTPSession(const char *uri);
+    void parseJSONResponse(const char *buffer, unsigned int bufferSize, char *response);
 };
