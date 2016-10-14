@@ -1,9 +1,10 @@
 #include "sim800.h"
+#include <string.h>
 
 /* Error codes */
 
 enum Result {
-  OK,
+  SUCCESS,
   ERROR_BEARER_PROFILE_GPRS,
   ERROR_BEARER_PROFILE_APN,
   ERROR_OPEN_GPRS_CONTEXT,
@@ -14,7 +15,8 @@ enum Result {
   ERROR_HTTP_PARA,
   ERROR_HTTP_GET,
   ERROR_HTTP_READ,
-  ERROR_HTTP_CLOSE
+  ERROR_HTTP_CLOSE,
+  ERROR_NOT_REACHABLE
 };
 
 
@@ -27,6 +29,5 @@ class HTTP : public SIM800 {
     Result disconnect();
     Result get(const char *url, char *response);
 
-  private:
     void parseJSONResponse(const char *buffer, char *response, unsigned int bufferSize);
 };

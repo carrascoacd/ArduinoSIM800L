@@ -46,7 +46,7 @@ int SIM800::preInit(void)
             digitalWrite(powerPin,HIGH);
             delay(3000);  
         }
-        while(sendATTest() == FALSE);                
+        while(sendATTest() == FALSE);             
         return TRUE;        
     }
     else
@@ -75,7 +75,7 @@ int SIM800::readBuffer(char *buffer, int count, unsigned int timeOut)
         }
         if(i > count-1)break;
         timerEnd = millis();
-        if(timerEnd - timerStart > 1000 * timeOut) {
+        if(timerEnd - timerStart > timeOut) {
             break;
         }
     }
@@ -118,7 +118,7 @@ int SIM800::waitForResp(const char *resp, unsigned int timeout)
             if(sum == len)break;
         }
         timerEnd = millis();
-        if(timerEnd - timerStart > 1000 * timeout) {
+        if(timerEnd - timerStart > timeout) {
             return FALSE;
         }
     }

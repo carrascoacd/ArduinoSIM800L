@@ -1,29 +1,38 @@
 #include "http.h"
 
-const char *AT_HTTPPARA_URL = "AT+HTTPPARA=\"URL\",\"%s\"\n";
-
+const char *BEARER_PROFILE_GPRS = "AT+SAPBR=3,1,\"Contype\",\"GPRS\"\n";
+const char *BEARER_PROFILE_APN = "AT+SAPBR=3,1,\"APN\",\"%s\"\n";
+const char *OPEN_GPRS_CONTEXT = "AT+SAPBR=1,1\n";
+const char *CLOSE_GPRS_CONTEXT = "AT+SAPBR=0,1\n";
+const char *HTTP_INIT = "AT+HTTPINIT\n";
+const char *HTTP_CID = "AT+HTTPPARA=\"CID\",1\n";
+const char *HTTP_PARA = "AT+HTTPPARA=\"URL\",\"%s\"\n";
+const char *HTTP_GET = "AT+HTTPACTION=0\n";
+const char *HTTP_READ = "AT+HTTPREAD\n";
+const char *HTTP_CLOSE = "AT+HTTPTERM\n";
+const char *OK = "OK";
+const char *HTTP_200 = ",200,";
 
 Result HTTP::configureBearer(const char *apn){
 
-  Result result = OK;
-  if (sendCmdAndWaitForResp("AT+SAPBR=3,1,\"Contype\",\"GPRS\"\n", "OK", 2) == FALSE)
+  Result result = SUCCESS;
+  if (sendCmdAndWaitForResp(BEARER_PROFILE_GPRS, OK, 2000) == FALSE)
     result = ERROR_BEARER_PROFILE_GPRS;
   
   char httpApn[128];
-  sprintf(httpApn, "AT+SAPBR=3,1,\"APN\",\"%s\"\n", apn);
-  if (sendCmdAndWaitForResp(httpApn, "OK", 2) == FALSE)
+  sprintf(httpApn, BEARER_PROFILE_APN, apn);
+  if (sendCmdAndWaitForResp(httpApn, OK, 2000) == FALSE)
     result = ERROR_BEARER_PROFILE_APN;
   
   return result;
 }
 
-
 Result HTTP::connect() {
 
-  Result result = OK;
-  if (sendCmdAndWaitForResp("AT+SAPBR=1,1\n", "OK", 2) == FALSE)
+  Result result = SUCCESS;
+  if (sendCmdAndWaitForResp(OPEN_GPRS_CONTEXT, OK, 2000) == FALSE)
     result = ERROR_OPEN_GPRS_CONTEXT;
-  if (sendCmdAndWaitForResp("AT+HTTPINIT\n", "OK", 2) == FALSE)
+  if (sendCmdAndWaitForResp(HTTP_INIT, OK, 2000) == FALSE)
     result = ERROR_HTTP_INIT;
 
   return result;
@@ -31,10 +40,10 @@ Result HTTP::connect() {
 
 Result HTTP::disconnect() {
 
-  Result result = OK;
-  if (sendCmdAndWaitForResp("AT+HTTPTERM\n", "OK", 2) == FALSE)
+  Result result = SUCCESS;
+  if (sendCmdAndWaitForResp(HTTP_CLOSE, OK, 2000) == FALSE)
     result = ERROR_HTTP_CLOSE;
-  if (sendCmdAndWaitForResp("AT+SAPBR=0,1\n", "OK", 2) == FALSE)
+  if (sendCmdAndWaitForResp(CLOSE_GPRS_CONTEXT, OK, 2000) == FALSE)
     result = ERROR_CLOSE_GPRS_CONTEXT;
 
   return result;
@@ -42,19 +51,20 @@ Result HTTP::disconnect() {
 
 Result HTTP::get(const char *url, char *response) {
 
-  Result result = OK;
+  Result result = SUCCESS;
 
-  if (sendCmdAndWaitForResp("AT+HTTPPARA=\"CID\",1\n", "OK", 2) == FALSE)
+  if (sendCmdAndWaitForResp(HTTP_CID, OK, 2000) == FALSE)
     result = ERROR_HTTP_CID;
 
-  char httpPara[128];
-  sprintf(httpPara, AT_HTTPPARA_URL, url);
-  if (sendCmdAndWaitForResp(httpPara, "OK,", 2) == FALSE)
+  char httpPara[512];
+  sprintf(httpPara, HTTP_PARA, url);
+
+  if (sendCmdAndWaitForResp(httpPara, OK, 2000) == FALSE)
     result = ERROR_HTTP_PARA;
   
-  if (sendCmdAndWaitForResp("AT+HTTPACTION=0\n", ",200,", 5) == TRUE) {
-    sendCmd("AT+HTTPREAD\n");
-    result = OK;
+  if (sendCmdAndWaitForResp(HTTP_GET, HTTP_200, 5000) == TRUE) {
+    sendCmd(HTTP_READ);
+    result = SUCCESS;
 
     char buffer[256];
     cleanBuffer(buffer, sizeof(buffer));
