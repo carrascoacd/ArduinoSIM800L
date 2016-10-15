@@ -1,11 +1,9 @@
 /*
- * sim800.h
+ * Sim800.h
  * A library for SeeedStudio seeeduino GPRS shield 
  *
- * Copyright (c) 2013 seeed technology inc.
- * Author        :   lawliet zou
- * Create Time   :   Dec 2013
- * Change Log    :
+ * Original work Copyright (c) 2013 seeed technology inc. [lawliet zou]
+ * Modified work Copyright 2016 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
