@@ -1,5 +1,5 @@
 # SIM800L
-An smart library based on Seeeduino that implements the AT HTTP commands to perform GET and POST requests to a JSON API.
+A smart library based on Seeeduino that implements the AT HTTP commands to perform GET and POST requests to a JSON API.
 In order to make a requests the library follows these steps:
 
 ##### Configure Bearer:
@@ -23,8 +23,7 @@ In order to make a requests the library follows these steps:
   - AT+HTTPPARA="CID",1  -> wait for OK
   - AT+HTTPPARA="URL","smartgarden.herokuapp.com"  -> wait for OK 
   
-  For example, if we have this body:
-  body = {"location_id": 238, "fill_percent": 90}
+  For example, if we have this body: {"location_id": 238, "fill_percent": 90}
 
   - AT+HTTPPARA="CONTENT","application/json"
   - AT+HTTPDATA=strlen(body),10000 -> wait for DOWNLOAD, then write the body and wait 10000
