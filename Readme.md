@@ -1,9 +1,10 @@
 # SIM800L
 A smart library based on Seeeduino that implements the AT HTTP commands to perform GET and POST requests to a JSON API.
-In order to make a requests the library follows these steps:
+In order to perform a request, the library follows these steps:
 
 ##### Configure Bearer:
 
+  - AT+CREG? -> try until 0,1 (connected to the network)
   - AT+SAPBR=3,1,"Contype","GPRS" -> wait for OK
   - AT+SAPBR=3,1,"APN","movistar.es" -> wait for OK
   - AT+SAPBR=1,1 -> wait for OK
@@ -31,3 +32,4 @@ In order to make a requests the library follows these steps:
   - AT+HTTPREAD -> read buffer and parse it
   - AT+HTTPTERM -> wait for OK
   - AT+SAPBR=0,1
+

@@ -37,8 +37,7 @@
 
 #define SIM800_TX_PIN           8
 #define SIM800_RX_PIN           7
-#define SIM800_POWER_PIN        9
-#define SIM800_POWER_STATUS     12
+#define SIM800_RESET_PIN        12
 
 #define UART_DEBUG
 
@@ -65,8 +64,6 @@ public:
      *  @param baudRate baud rate of uart communication
      */
     SIM800(int baudRate):serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN){
-        powerPin = SIM800_POWER_PIN;
-        pinMode(powerPin,OUTPUT);
         serialSIM800.begin(baudRate);
     };
     
@@ -132,10 +129,11 @@ public:
      */
     void serialDebug(void);
     
-    int powerPin;
-    SoftwareSerial serialSIM800;
+    void purgeSerial();
 
 private:
+    
+    SoftwareSerial serialSIM800;
     
 };
 

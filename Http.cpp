@@ -28,48 +28,61 @@
 #include "Http.h"
 #include <string.h>
 
-const char *BEARER_PROFILE_GPRS = "AT+SAPBR=3,1,\"Contype\",\"GPRS\"\n";
-const char *BEARER_PROFILE_APN = "AT+SAPBR=3,1,\"APN\",\"%s\"\n";
-const char *OPEN_GPRS_CONTEXT = "AT+SAPBR=1,1\n";
-const char *CLOSE_GPRS_CONTEXT = "AT+SAPBR=0,1\n";
-const char *HTTP_INIT = "AT+HTTPINIT\n";
-const char *HTTP_CID = "AT+HTTPPARA=\"CID\",1\n";
-const char *HTTP_PARA = "AT+HTTPPARA=\"URL\",\"%s\"\n";
-const char *HTTP_GET = "AT+HTTPACTION=0\n";
-const char *HTTP_POST = "AT+HTTPACTION=1\n";
-const char *HTTP_DATA = "AT+HTTPDATA=%d,%d\n";
-const char *HTTP_READ = "AT+HTTPREAD\n";
-const char *HTTP_CLOSE = "AT+HTTPTERM\n";
-const char *HTTP_CONTENT = "AT+HTTPPARA=\"CONTENT\",\"application/json\"\n";
-const char *OK = "OK";
-const char *DOWNLOAD = "DOWNLOAD";
-const char *HTTP_200 = ",200,";
+#define BEARER_PROFILE_GPRS "AT+SAPBR=3,1,\"Contype\",\"GPRS\"\r\n"
+#define BEARER_PROFILE_APN "AT+SAPBR=3,1,\"APN\",\"%s\"\r\n"
+#define OPEN_GPRS_CONTEXT "AT+SAPBR=1,1\r\n"
+#define CLOSE_GPRS_CONTEXT "AT+SAPBR=0,1\r\n"
+#define HTTP_INIT "AT+HTTPINIT\r\n"
+#define HTTP_CID "AT+HTTPPARA=\"CID\",1\r\n"
+#define HTTP_PARA "AT+HTTPPARA=\"URL\",\"%s\"\r\n"
+#define HTTP_GET "AT+HTTPACTION=0\r\n"
+#define HTTP_POST "AT+HTTPACTION=1\n"
+#define HTTP_DATA "AT+HTTPDATA=%d,%d\r\n"
+#define HTTP_READ "AT+HTTPREAD\r\n"
+#define HTTP_CLOSE "AT+HTTPTERM\r\n"
+#define HTTP_CONTENT "AT+HTTPPARA=\"CONTENT\",\"application/json\"\r\n"
+#define NORMAL_MODE "AT+CFUN=1,1\r\n"
+#define REGISTRATION_STATUS "AT+CREG?\r\n"
+
+#define OK "OK\r\n"
+#define DOWNLOAD "DOWNLOAD"
+#define HTTP_200 ",200,"
+#define CONNECTED "+CREG: 0,1"
+
 
 Result HTTP::configureBearer(const char *apn){
 
   Result result = SUCCESS;
 
-  if (preInit() == FALSE){
-    result = ERROR_INITIALIZATION;
+  int attempts = 0;
+  int MAX_ATTEMPTS = 10;
+  while (sendCmdAndWaitForResp(REGISTRATION_STATUS, CONNECTED, 5000) != TRUE && attempts < MAX_ATTEMPTS){
+    attempts ++;
+    if (attempts == MAX_ATTEMPTS) {
+      attempts = 0;
+      preInit();
+    }
   }
-  else{
-    if (sendCmdAndWaitForResp(BEARER_PROFILE_GPRS, OK, 2000) == FALSE)
-      result = ERROR_BEARER_PROFILE_GPRS;
-    
-    char httpApn[128];
-    sprintf(httpApn, BEARER_PROFILE_APN, apn);
-    if (sendCmdAndWaitForResp(httpApn, OK, 2000) == FALSE)
-      result = ERROR_BEARER_PROFILE_APN;
-  }
+
+  if (sendCmdAndWaitForResp(BEARER_PROFILE_GPRS, OK, 5000) == FALSE)
+    result = ERROR_BEARER_PROFILE_GPRS;
+  
+  char httpApn[128];
+  sprintf(httpApn, BEARER_PROFILE_APN, apn);
+  if (sendCmdAndWaitForResp(httpApn, OK, 5000) == FALSE)
+    result = ERROR_BEARER_PROFILE_APN;
+  
   return result;
 }
 
 Result HTTP::connect() {
 
   Result result = SUCCESS;
-  if (sendCmdAndWaitForResp(OPEN_GPRS_CONTEXT, OK, 2000) == FALSE)
+
+  if (sendCmdAndWaitForResp(OPEN_GPRS_CONTEXT, OK, 5000) == FALSE)
     result = ERROR_OPEN_GPRS_CONTEXT;
-  if (sendCmdAndWaitForResp(HTTP_INIT, OK, 2000) == FALSE)
+
+  if (sendCmdAndWaitForResp(HTTP_INIT, OK, 5000) == FALSE)
     result = ERROR_HTTP_INIT;
 
   return result;
@@ -78,10 +91,11 @@ Result HTTP::connect() {
 Result HTTP::disconnect() {
 
   Result result = SUCCESS;
-  if (sendCmdAndWaitForResp(HTTP_CLOSE, OK, 2000) == FALSE)
-    result = ERROR_HTTP_CLOSE;
+
   if (sendCmdAndWaitForResp(CLOSE_GPRS_CONTEXT, OK, 2000) == FALSE)
     result = ERROR_CLOSE_GPRS_CONTEXT;
+  if (sendCmdAndWaitForResp(HTTP_CLOSE, OK, 2000) == FALSE)
+    result = ERROR_HTTP_CLOSE;
 
   return result;
 }
@@ -89,9 +103,6 @@ Result HTTP::disconnect() {
 Result HTTP::post(const char *uri, const char *body, char *response) {
 
   Result result = setHTTPSession(uri);
-
-  if (sendCmdAndWaitForResp(HTTP_CONTENT, OK, 5000) == FALSE)
-    result = ERROR_HTTP_CONTENT;
 
   char httpData[128];
   int delayToDownload = 5000;
@@ -101,6 +112,7 @@ Result HTTP::post(const char *uri, const char *body, char *response) {
   }
 
   sendCmd(body);
+  purgeSerial();
   delay(delayToDownload);
 
   if (sendCmdAndWaitForResp(HTTP_POST, HTTP_200, 5000) == TRUE) {
@@ -111,6 +123,8 @@ Result HTTP::post(const char *uri, const char *body, char *response) {
   else {
     result = ERROR_HTTP_POST;
   }
+  
+  return result;
 }
 
 Result HTTP::get(const char *uri, char *response) {
@@ -140,6 +154,9 @@ Result HTTP::setHTTPSession(const char *uri){
 
   if (sendCmdAndWaitForResp(httpPara, OK, 2000) == FALSE)
     result = ERROR_HTTP_PARA;
+
+  if (sendCmdAndWaitForResp(HTTP_CONTENT, OK, 2000) == FALSE)
+    result = ERROR_HTTP_CONTENT;
 
   return result;
 }

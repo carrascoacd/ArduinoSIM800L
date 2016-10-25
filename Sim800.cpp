@@ -30,27 +30,18 @@
 
 int SIM800::preInit(void)
 {
-    pinMode(SIM800_POWER_STATUS,INPUT);
-    delay(10);
-    if(LOW == digitalRead(SIM800_POWER_STATUS))
-    {
-        if(sendATTest() == FALSE)
-        {
-            delay(800);
-            digitalWrite(powerPin,HIGH);
-            delay(200);
-            digitalWrite(powerPin,LOW);
-            delay(2000);
-            digitalWrite(powerPin,HIGH);
-            delay(3000);  
-        }
-        while(sendATTest() == FALSE);             
-        return TRUE;        
-    }
-    else
-    {
-        return FALSE;
-    }
+    pinMode(SIM800_RESET_PIN, OUTPUT);
+
+    digitalWrite(SIM800_RESET_PIN, HIGH);
+    delay(200);
+    digitalWrite(SIM800_RESET_PIN, LOW);
+    delay(2000);
+    digitalWrite(SIM800_RESET_PIN, HIGH);
+    delay(3000);
+
+    purgeSerial();
+    
+    return TRUE;
 }
 
 int SIM800::checkReadable(void)
@@ -112,6 +103,7 @@ int SIM800::waitForResp(const char *resp, unsigned int timeout)
     while(1) {
         if(serialSIM800.available()) {
             char c = serialSIM800.read();
+            Serial.print(c);
             sum = (c==resp[sum]) ? sum+1 : 0;
             if(sum == len)break;
         }
@@ -150,4 +142,9 @@ void SIM800::serialDebug(void)
             serialSIM800.write(Serial.read()); 
         }
     }
+}
+
+void SIM800::purgeSerial()
+{
+  while (serialSIM800.available()) serialSIM800.read();
 }
