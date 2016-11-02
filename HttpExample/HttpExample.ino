@@ -31,7 +31,7 @@ void loop() {
     
   char response[256];
   
-  result = http.get("smartgarden.herokuapp.com", response);
+  result = http.get("smartgarden.herokuapp.com/api", response);
   print("HTTP GET: %d", result);
   if (result == SUCCESS) {
     Serial.println(response);
@@ -43,7 +43,7 @@ void loop() {
     Serial.println((const char *)root["name"]);
   }
 
-  result = http.post("smartgarden.herokuapp.com", "{\"name\":\"Antonio\"}", response);
+  result = http.post("smartgarden.herokuapp.com/api", "{\"name\":\"Antonio\"}", response);
   print("HTTP POST: %d", result);
   if (result == SUCCESS) {
     Serial.println(response);

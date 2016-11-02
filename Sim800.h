@@ -30,16 +30,17 @@
 #define __SIM800_H__
 
 #include "Arduino.h"
+
+
+#ifdef ARDUINO_SAM_DUE
+#include <HardwareSerial.h>
+#define serialSIM800 Serial1
+#else
 #include <SoftwareSerial.h>
-
-#define TRUE                    1
-#define FALSE                   0
-
 #define SIM800_TX_PIN           8
 #define SIM800_RX_PIN           7
-#define SIM800_RESET_PIN        12
-
-#define UART_DEBUG
+#define serialSIM800 SoftwareSerial(SIM800_TX_PIN,SIM800_RX_PIN)
+#endif
 
 #ifdef UART_DEBUG
 #define ERROR(x)            Serial.println(x)
@@ -49,6 +50,10 @@
 #define DEBUG(x)
 #endif
 
+#define TRUE                    1
+#define FALSE                   0
+#define SIM800_RESET_PIN        12
+#define UART_DEBUG
 #define DEFAULT_TIMEOUT     5000
 
 /** SIM800 class.
@@ -63,7 +68,7 @@ public:
      *  @param rx   uart receive pin to communicate with SIM800
      *  @param baudRate baud rate of uart communication
      */
-    SIM800(int baudRate):serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN){
+    SIM800(int baudRate){
         serialSIM800.begin(baudRate);
     };
     
@@ -130,10 +135,6 @@ public:
     void serialDebug(void);
     
     void purgeSerial();
-
-private:
-    
-    SoftwareSerial serialSIM800;
     
 };
 
