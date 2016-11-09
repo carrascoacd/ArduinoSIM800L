@@ -1,5 +1,53 @@
-# SIM800L
-A smart library based on Seeeduino that implements the AT HTTP commands to perform GET and POST requests to a JSON API.
+
+# HTTP client for SIM800L
+A smart HTTP client based on Seeeduino that implements the AT HTTP commands to perform GET and POST requests to a JSON API. 
+
+## Support
+* Your board have to support the standard SoftwareSerial library. It doesn't  work with HardwareSerial based boards for the moment.
+* The API response have to be a valid JSON.
+
+## Instalation
+Download the library and then import it.
+
+## Quick start!
+
+Here's some code to perform a GET request! :+1:
+
+``` c++
+HTTP http;
+http.configureBearer("movistar.es");
+http.connect();
+
+char response[256];
+Result result = http.get("your.api.com", response);
+
+Serial.println(response);
+// This prints the response body. Note that the response have to be a valid JSON
+
+http.disconnect();
+
+```
+
+Here's some code to perform a POST request! :+1:
+
+``` c++
+HTTP http;
+http.configureBearer("movistar.es");
+http.connect();
+
+char response[256];
+Result result = http.post("your.api.com", "{\"date\":\"12345678\"}", response);
+
+Serial.println(response);
+// This prints the response body. Note that the response have to be a valid JSON
+
+http.disconnect();
+```
+
+I suggest the [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) library for parsing the JSON response, then you can play with the values easily.
+
+
+## How it works?
 In order to perform a request, the library follows these steps:
 
 ##### Configure Bearer:
@@ -33,3 +81,7 @@ In order to perform a request, the library follows these steps:
   - AT+HTTPTERM -> wait for OK
   - AT+SAPBR=0,1
 
+## Future improvements
+
+- Support of HardwareSerial.
+- Support of more content types, not only JSON (application/json).
