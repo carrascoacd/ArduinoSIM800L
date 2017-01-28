@@ -43,6 +43,7 @@
 #define HTTP_CONTENT "AT+HTTPPARA=\"CONTENT\",\"application/json\"\r\n"
 #define NORMAL_MODE "AT+CFUN=1,1\r\n"
 #define REGISTRATION_STATUS "AT+CREG?\r\n"
+#define SIGNAL_QUALITY "AT+CSQ\r\n"
 
 #define OK "OK\r\n"
 #define DOWNLOAD "DOWNLOAD"
@@ -56,7 +57,9 @@ Result HTTP::configureBearer(const char *apn){
 
   int attempts = 0;
   int MAX_ATTEMPTS = 10;
-  while (sendCmdAndWaitForResp(REGISTRATION_STATUS, CONNECTED, 5000) != TRUE && attempts < MAX_ATTEMPTS){
+  
+  while (sendCmdAndWaitForResp(REGISTRATION_STATUS, CONNECTED, 2000) != TRUE && attempts < MAX_ATTEMPTS){
+    sendCmdAndWaitForResp(SIGNAL_QUALITY, CONNECTED, 1000);
     attempts ++;
     if (attempts == MAX_ATTEMPTS) {
       attempts = 0;
@@ -64,12 +67,12 @@ Result HTTP::configureBearer(const char *apn){
     }
   }
 
-  if (sendCmdAndWaitForResp(BEARER_PROFILE_GPRS, OK, 5000) == FALSE)
+  if (sendCmdAndWaitForResp(BEARER_PROFILE_GPRS, OK, 2000) == FALSE)
     result = ERROR_BEARER_PROFILE_GPRS;
   
   char httpApn[128];
   sprintf(httpApn, BEARER_PROFILE_APN, apn);
-  if (sendCmdAndWaitForResp(httpApn, OK, 5000) == FALSE)
+  if (sendCmdAndWaitForResp(httpApn, OK, 2000) == FALSE)
     result = ERROR_BEARER_PROFILE_APN;
   
   return result;
@@ -79,10 +82,11 @@ Result HTTP::connect() {
 
   Result result = SUCCESS;
 
-  if (sendCmdAndWaitForResp(OPEN_GPRS_CONTEXT, OK, 5000) == FALSE)
+  if (sendCmdAndWaitForResp(OPEN_GPRS_CONTEXT, OK, 2000) == FALSE){
     result = ERROR_OPEN_GPRS_CONTEXT;
+  }
 
-  if (sendCmdAndWaitForResp(HTTP_INIT, OK, 5000) == FALSE)
+  if (sendCmdAndWaitForResp(HTTP_INIT, OK, 2000) == FALSE)
     result = ERROR_HTTP_INIT;
 
   return result;
@@ -104,18 +108,17 @@ Result HTTP::post(const char *uri, const char *body, char *response) {
 
   Result result = setHTTPSession(uri);
 
-  char httpData[128];
-  int delayToDownload = 5000;
-  sprintf(httpData, HTTP_DATA, strlen(body), delayToDownload);
-  if (sendCmdAndWaitForResp(httpData, DOWNLOAD, 5000) == FALSE){
+  char httpData[32];
+  int delayToDownload = 10000;
+  sprintf(httpData, HTTP_DATA, strlen(body), 2000);
+  if (sendCmdAndWaitForResp(httpData, DOWNLOAD, 2000) == FALSE){
     result = ERROR_HTTP_DATA;
   }
 
-  sendCmd(body);
   purgeSerial();
+  printData(body);
   delay(delayToDownload);
-
-  if (sendCmdAndWaitForResp(HTTP_POST, HTTP_200, 5000) == TRUE) {
+  if (sendCmdAndWaitForResp(HTTP_POST, HTTP_200, delayToDownload) == TRUE) {
     sendCmd(HTTP_READ);
     result = SUCCESS;
     readResponse(response);
@@ -131,7 +134,7 @@ Result HTTP::get(const char *uri, char *response) {
 
   Result result = setHTTPSession(uri);
   
-  if (sendCmdAndWaitForResp(HTTP_GET, HTTP_200, 5000) == TRUE) {
+  if (sendCmdAndWaitForResp(HTTP_GET, HTTP_200, 2000) == TRUE) {
     sendCmd(HTTP_READ);
     result = SUCCESS;
     readResponse(response);
@@ -149,7 +152,7 @@ Result HTTP::setHTTPSession(const char *uri){
   if (sendCmdAndWaitForResp(HTTP_CID, OK, 2000) == FALSE)
     result = ERROR_HTTP_CID;
 
-  char httpPara[512];
+  char httpPara[128];
   sprintf(httpPara, HTTP_PARA, uri);
 
   if (sendCmdAndWaitForResp(httpPara, OK, 2000) == FALSE)
@@ -163,7 +166,7 @@ Result HTTP::setHTTPSession(const char *uri){
 
 void HTTP::readResponse(char *response){
   
-  char buffer[256];  
+  char buffer[128];  
   cleanBuffer(buffer, sizeof(buffer));
   cleanBuffer(response, sizeof(response));
 
