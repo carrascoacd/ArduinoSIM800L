@@ -59,6 +59,8 @@ class HTTP : public SIM800 {
     Result disconnect();
     Result get(const char *uri, char *response);
     Result post(const char *uri, const char *body, char *response);
+    void sleep();
+    void wakeUp();
 
   private:
     void readResponse(char *response);

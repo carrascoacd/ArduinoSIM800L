@@ -45,6 +45,7 @@
 #define NORMAL_MODE "AT+CFUN=1,1\r\n"
 #define REGISTRATION_STATUS "AT+CREG?\r\n"
 #define SIGNAL_QUALITY "AT+CSQ\r\n"
+#define SLEEP_MODE "AT+CSCLK=1\r\n"
 
 #define OK "OK\r\n"
 #define DOWNLOAD "DOWNLOAD"
@@ -153,6 +154,14 @@ Result HTTP::get(const char *uri, char *response) {
   }
 
   return result;
+}
+
+void HTTP::sleep(){
+  sendCmdAndWaitForResp(SLEEP_MODE, OK, 2000);
+}
+
+void HTTP::wakeUp(){
+  if (sendATTest() != TRUE) preInit();
 }
 
 Result HTTP::setHTTPSession(const char *uri){
