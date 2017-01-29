@@ -97,11 +97,6 @@ public:
      */
     void sendCmd(const char* cmd);
 
-    /** print data for HTTP POST to SIM800 module
-     *  @param data array which will be send to GPRS module
-     */
-    void printData(const char* data);
-
     /**send "AT" to SIM800 module
      */
     int sendATTest(void);

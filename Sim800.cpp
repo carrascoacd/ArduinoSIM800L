@@ -87,12 +87,6 @@ void SIM800::sendCmd(const char* cmd)
     serialSIM800.write(cmd);
 }
 
-void SIM800::printData(const char* data)
-{
-    Serial.println(data);
-    serialSIM800.print(data);
-}
-
 int SIM800::sendATTest(void)
 {
     int ret = sendCmdAndWaitForResp("AT\r\n","OK",DEFAULT_TIMEOUT);

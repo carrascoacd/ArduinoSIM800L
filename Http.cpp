@@ -30,6 +30,7 @@
 
 #define BEARER_PROFILE_GPRS "AT+SAPBR=3,1,\"Contype\",\"GPRS\"\r\n"
 #define BEARER_PROFILE_APN "AT+SAPBR=3,1,\"APN\",\"%s\"\r\n"
+#define QUERY_BEARER "AT+SAPBR=2,1\r\n"
 #define OPEN_GPRS_CONTEXT "AT+SAPBR=1,1\r\n"
 #define CLOSE_GPRS_CONTEXT "AT+SAPBR=0,1\r\n"
 #define HTTP_INIT "AT+HTTPINIT\r\n"
@@ -49,18 +50,22 @@
 #define DOWNLOAD "DOWNLOAD"
 #define HTTP_200 ",200,"
 #define CONNECTED "+CREG: 0,1"
+#define BEARER_OPEN "+SAPBR:1,1"
 
 
 Result HTTP::configureBearer(const char *apn){
 
   Result result = SUCCESS;
 
-  int attempts = 0;
-  int MAX_ATTEMPTS = 10;
+  unsigned int attempts = 0;
+  unsigned int MAX_ATTEMPTS = 10;
+
+  sendATTest();
   
   while (sendCmdAndWaitForResp(REGISTRATION_STATUS, CONNECTED, 2000) != TRUE && attempts < MAX_ATTEMPTS){
     sendCmdAndWaitForResp(SIGNAL_QUALITY, CONNECTED, 1000);
     attempts ++;
+    delay(1000 * attempts);
     if (attempts == MAX_ATTEMPTS) {
       attempts = 0;
       preInit();
@@ -70,7 +75,7 @@ Result HTTP::configureBearer(const char *apn){
   if (sendCmdAndWaitForResp(BEARER_PROFILE_GPRS, OK, 2000) == FALSE)
     result = ERROR_BEARER_PROFILE_GPRS;
   
-  char httpApn[128];
+  char httpApn[64];
   sprintf(httpApn, BEARER_PROFILE_APN, apn);
   if (sendCmdAndWaitForResp(httpApn, OK, 2000) == FALSE)
     result = ERROR_BEARER_PROFILE_APN;
@@ -82,8 +87,10 @@ Result HTTP::connect() {
 
   Result result = SUCCESS;
 
-  if (sendCmdAndWaitForResp(OPEN_GPRS_CONTEXT, OK, 2000) == FALSE){
-    result = ERROR_OPEN_GPRS_CONTEXT;
+  if (sendCmdAndWaitForResp(QUERY_BEARER, BEARER_OPEN, 2000) == FALSE){
+    if (sendCmdAndWaitForResp(OPEN_GPRS_CONTEXT, OK, 6000) == FALSE){
+      result = ERROR_OPEN_GPRS_CONTEXT;
+    }
   }
 
   if (sendCmdAndWaitForResp(HTTP_INIT, OK, 2000) == FALSE)
@@ -109,24 +116,26 @@ Result HTTP::post(const char *uri, const char *body, char *response) {
   Result result = setHTTPSession(uri);
 
   char httpData[32];
-  int delayToDownload = 10000;
-  sprintf(httpData, HTTP_DATA, strlen(body), 2000);
+  unsigned int delayToDownload = 10000;
+  sprintf(httpData, HTTP_DATA, strlen(body), 10000);
   if (sendCmdAndWaitForResp(httpData, DOWNLOAD, 2000) == FALSE){
     result = ERROR_HTTP_DATA;
   }
 
   purgeSerial();
-  printData(body);
-  delay(delayToDownload);
+  delay(500);
+  sendCmd(body);
+  delay(1000);
+
   if (sendCmdAndWaitForResp(HTTP_POST, HTTP_200, delayToDownload) == TRUE) {
     sendCmd(HTTP_READ);
-    result = SUCCESS;
     readResponse(response);
+    result = SUCCESS;
   }
   else {
     result = ERROR_HTTP_POST;
   }
-  
+
   return result;
 }
 
