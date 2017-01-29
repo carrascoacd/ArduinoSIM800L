@@ -50,7 +50,7 @@
 #define DOWNLOAD "DOWNLOAD"
 #define HTTP_200 ",200,"
 #define CONNECTED "+CREG: 0,1"
-#define BEARER_OPEN "+SAPBR:1,1"
+#define BEARER_OPEN "+SAPBR: 1,1"
 
 
 Result HTTP::configureBearer(const char *apn){
