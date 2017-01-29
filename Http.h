@@ -53,7 +53,7 @@ enum Result {
 class HTTP : public SIM800 {
 
   public:
-    HTTP(int baudRate = 9600):SIM800(baudRate){};
+    HTTP(unsigned int baudRate = 9600, bool debug = TRUE):SIM800(baudRate, debug){};
     Result configureBearer(const char *apn);
     Result connect();
     Result disconnect();

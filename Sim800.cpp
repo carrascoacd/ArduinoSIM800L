@@ -103,7 +103,7 @@ int SIM800::waitForResp(const char *resp, unsigned int timeout)
     while(1) {
         if(serialSIM800.available()) {
             char c = serialSIM800.read();
-            Serial.print(c);
+            if (debugMode) Serial.print(c);
             sum = (c==resp[sum]) ? sum+1 : 0;
             if(sum == len)break;
         }

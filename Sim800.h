@@ -39,17 +39,8 @@
 #define SIM800_RX_PIN           7
 #define SIM800_RESET_PIN        12
 
-#define UART_DEBUG
+#define DEFAULT_TIMEOUT         5000
 
-#ifdef UART_DEBUG
-#define ERROR(x)            Serial.println(x)
-#define DEBUG(x)            Serial.println(x);
-#else
-#define ERROR(x)
-#define DEBUG(x)
-#endif
-
-#define DEFAULT_TIMEOUT     5000
 
 /** SIM800 class.
  *  Used for SIM800 communication. attention that SIM800 module communicate with MCU in serial protocol
@@ -63,8 +54,9 @@ public:
      *  @param rx   uart receive pin to communicate with SIM800
      *  @param baudRate baud rate of uart communication
      */
-    SIM800(int baudRate):serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN){
+    SIM800(unsigned int baudRate, bool debug):serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN){
         serialSIM800.begin(baudRate);
+        debugMode = debug;
     };
     
     /** Power on SIM800
@@ -134,6 +126,7 @@ public:
 private:
     
     SoftwareSerial serialSIM800;
+    bool debugMode;
     
 };
 
