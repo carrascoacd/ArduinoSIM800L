@@ -178,14 +178,9 @@ Result HTTP::setHTTPSession(const char *uri){
   if (sendCmdAndWaitForResp(httpPara, OK, 2000) == FALSE)
     result = ERROR_HTTP_PARA;
 
-  if (strncmp(HTTPS_PREFIX, uri, strlen(HTTPS_PREFIX)) == 0) {
-    if (sendCmdAndWaitForResp(HTTPS_ENABLE, OK, 2000) == FALSE) {
-      result = ERROR_HTTPS_ENABLE;
-    }
-  } else {
-    if (sendCmdAndWaitForResp(HTTPS_DISABLE, OK, 2000) == FALSE) {
-      result = ERROR_HTTPS_DISABLE;
-    }
+  bool https = strncmp(HTTPS_PREFIX, uri, strlen(HTTPS_PREFIX)) == 0;
+  if (sendCmdAndWaitForResp(https ? HTTPS_ENABLE : HTTPS_DISABLE, OK, 2000) == FALSE) {
+    result = https ? ERROR_HTTPS_ENABLE : ERROR_HTTPS_DISABLE;
   }
 
   if (sendCmdAndWaitForResp(HTTP_CONTENT, OK, 2000) == FALSE)
