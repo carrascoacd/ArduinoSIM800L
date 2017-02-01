@@ -1,6 +1,6 @@
 /*
  * Sim800.cpp
- * A library for SeeedStudio seeeduino GPRS shield 
+ * A library for SeeedStudio seeeduino GPRS shield
  *
  * Original work Copyright (c) 2013 seeed technology inc. [lawliet zou]
  * Modified work Copyright 2016 Antonio Carrasco
@@ -40,7 +40,7 @@ int SIM800::preInit(void)
     delay(3000);
 
     purgeSerial();
-    
+
     return TRUE;
 }
 
@@ -56,7 +56,7 @@ int SIM800::readBuffer(char *buffer, int count, unsigned int timeOut)
     timerStart = millis();
     while(1) {
         while (serialSIM800.available()) {
-            char c = serialSIM800.read();                        
+            char c = serialSIM800.read();
             buffer[i] = c;
             buffer[i + 1] = '\0';
             ++i;
@@ -84,6 +84,7 @@ void SIM800::cleanBuffer(char *buffer, int count)
 
 void SIM800::sendCmd(const char* cmd)
 {
+    serialSIM800.listen();
     serialSIM800.write(cmd);
 }
 
@@ -99,7 +100,7 @@ int SIM800::waitForResp(const char *resp, unsigned int timeout)
     int sum=0;
     unsigned long timerStart,timerEnd;
     timerStart = millis();
-    
+
     while(1) {
         if(serialSIM800.available()) {
             char c = serialSIM800.read();
@@ -138,8 +139,8 @@ void SIM800::serialDebug(void)
         if(serialSIM800.available()){
             Serial.write(serialSIM800.read());
         }
-        if(Serial.available()){     
-            serialSIM800.write(Serial.read()); 
+        if(Serial.available()){
+            serialSIM800.write(Serial.read());
         }
     }
 }
