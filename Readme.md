@@ -14,7 +14,10 @@ Download the library and then import it.
 Here's some code to perform a GET request! :+1:
 
 ``` c++
-HTTP http;
+unsigned int RX_PIN = 7;
+unsigned int TX_PIN = 8;
+unsigned int RST_PIN = 12;
+HTTP http(9600, RX_PIN, TX_PIN, RST_PIN);
 http.configureBearer("movistar.es");
 http.connect();
 
@@ -31,7 +34,10 @@ http.disconnect();
 Here's some code to perform a POST request! :+1:
 
 ``` c++
-HTTP http;
+unsigned int RX_PIN = 7;
+unsigned int TX_PIN = 8;
+unsigned int RST_PIN = 12;
+HTTP http(9600, RX_PIN, TX_PIN, RST_PIN);
 http.configureBearer("movistar.es");
 http.connect();
 

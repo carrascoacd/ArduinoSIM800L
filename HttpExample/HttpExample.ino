@@ -3,7 +3,11 @@
 
 unsigned long lastRunTime = 0;
 unsigned long waitForRunTime = 0;
-HTTP http;
+
+unsigned int RX_PIN = 7;
+unsigned int TX_PIN = 8;
+unsigned int RST_PIN = 12;
+HTTP http(9600, RX_PIN, TX_PIN, RST_PIN);
 
 // the setup routine runs once when you press reset:
 void setup() {
