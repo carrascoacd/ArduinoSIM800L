@@ -1,6 +1,6 @@
 /*
  * Sim800.h
- * A library for SeeedStudio seeeduino GPRS shield 
+ * A library for SeeedStudio seeeduino GPRS shield
  *
  * Original work Copyright (c) 2013 seeed technology inc. [lawliet zou]
  * Modified work Copyright 2016 Antonio Carrasco
@@ -35,10 +35,6 @@
 #define TRUE                    1
 #define FALSE                   0
 
-#define SIM800_TX_PIN           8
-#define SIM800_RX_PIN           7
-#define SIM800_RESET_PIN        12
-
 #define DEFAULT_TIMEOUT         5000
 
 
@@ -49,41 +45,42 @@ class SIM800
 {
 
 public:
-    /** Create SIM800 Instance 
-     *  @param tx   uart transmit pin to communicate with SIM800
-     *  @param rx   uart receive pin to communicate with SIM800
+    /** Create SIM800 Instance
      *  @param baudRate baud rate of uart communication
+     *  @param rxPin uart receive pin to communicate with SIM800
+     *  @param txPin uart transmit pin to communicate with SIM800
      */
-    SIM800(unsigned int baudRate, bool debug):serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN){
+    SIM800(unsigned int baudRate, unsigned int rxPin, unsigned int txPin, unsigned int rstPin, bool debug):serialSIM800(txPin, rxPin) {
         serialSIM800.begin(baudRate);
         debugMode = debug;
+        resetPin = rstPin;
     };
-    
+
     /** Power on SIM800
      */
     int preInit(void);
-    
+
     /** Check if SIM800 readable
      */
     int checkReadable(void);
-    
+
     /** read from SIM800 module and save to buffer array
      *  @param  buffer  buffer array to save what read from SIM800 module
      *  @param  count   the maximal bytes number read from SIM800 module
-     *  @param  timeOut time to wait for reading from SIM800 module 
+     *  @param  timeOut time to wait for reading from SIM800 module
      *  @returns
      *      TRUE on success
      *      ERROR on error
      */
     int readBuffer(char* buffer,int count, unsigned int timeOut = DEFAULT_TIMEOUT);
 
-    
+
     /** clean Buffer
      *  @param buffer   buffer to clean
      *  @param count    number of bytes to clean
      */
     void cleanBuffer(char* buffer, int count);
-    
+
     /** send AT command to SIM800 module
      *  @param cmd  command array which will be send to GPRS module
      */
@@ -92,18 +89,18 @@ public:
     /**send "AT" to SIM800 module
      */
     int sendATTest(void);
-    
+
     /**send '0x1A' to SIM800 Module
      */
     void sendEndMark(void);
-    
+
     /** check SIM800 module response before time out
      *  @param  *resp   correct response which SIM800 module will return
      *  @param  *timeout    waiting seconds till timeout
      *  @returns
      *      TRUE on success
      *      ERROR on error
-     */ 
+     */
     int waitForResp(const char* resp, unsigned timeout);
 
     /** send AT command to GPRS module and wait for correct response
@@ -120,14 +117,15 @@ public:
     /** used for serial debug, you can specify tx and rx pin and then communicate with GPRS module with common AT commands
      */
     void serialDebug(void);
-    
+
     void purgeSerial();
 
 private:
-    
+
     SoftwareSerial serialSIM800;
     bool debugMode;
-    
+    unsigned int resetPin;
+
 };
 
 #endif
