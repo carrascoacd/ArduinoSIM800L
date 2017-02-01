@@ -30,13 +30,13 @@
 
 int SIM800::preInit(void)
 {
-    pinMode(SIM800_RESET_PIN, OUTPUT);
+    pinMode(resetPin, OUTPUT);
 
-    digitalWrite(SIM800_RESET_PIN, HIGH);
+    digitalWrite(resetPin, HIGH);
     delay(200);
-    digitalWrite(SIM800_RESET_PIN, LOW);
+    digitalWrite(resetPin, LOW);
     delay(2000);
-    digitalWrite(SIM800_RESET_PIN, HIGH);
+    digitalWrite(resetPin, HIGH);
     delay(3000);
 
     purgeSerial();
