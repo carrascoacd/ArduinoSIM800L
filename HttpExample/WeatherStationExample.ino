@@ -86,7 +86,7 @@ void trackTimeEntry(){
   
   sprintf(body, "[{\"weatherEntries\":[{\"moisture\": %d, \"currentVoltage\": %s}], \"name\": \"Arduino\"}]", moisture, voltage);
   Serial.println(body);
-  result = http.post("smartgarden.herokuapp.com/api/devices", body, response);
+  result = http.post("your.domain/api/devices", body, response);
   print(F("HTTP POST: "), result);
   if (result == SUCCESS) {
     Serial.println(response);
