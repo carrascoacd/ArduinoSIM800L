@@ -42,6 +42,8 @@
 #define HTTP_READ "AT+HTTPREAD\r\n"
 #define HTTP_CLOSE "AT+HTTPTERM\r\n"
 #define HTTP_CONTENT "AT+HTTPPARA=\"CONTENT\",\"application/json\"\r\n"
+#define HTTPS_ENABLE "AT+HTTPSSL=1\r\n"
+#define HTTPS_DISABLE "AT+HTTPSSL=0\r\n"
 #define NORMAL_MODE "AT+CFUN=1,1\r\n"
 #define REGISTRATION_STATUS "AT+CREG?\r\n"
 #define SIGNAL_QUALITY "AT+CSQ\r\n"
@@ -50,9 +52,9 @@
 #define OK "OK\r\n"
 #define DOWNLOAD "DOWNLOAD"
 #define HTTP_200 ",200,"
+#define HTTPS_PREFIX "https://"
 #define CONNECTED "+CREG: 0,1"
 #define BEARER_OPEN "+SAPBR: 1,1"
-
 
 Result HTTP::configureBearer(const char *apn){
 
@@ -62,7 +64,7 @@ Result HTTP::configureBearer(const char *apn){
   unsigned int MAX_ATTEMPTS = 10;
 
   sendATTest();
-  
+
   while (sendCmdAndWaitForResp(REGISTRATION_STATUS, CONNECTED, 2000) != TRUE && attempts < MAX_ATTEMPTS){
     sendCmdAndWaitForResp(SIGNAL_QUALITY, CONNECTED, 1000);
     attempts ++;
@@ -75,12 +77,12 @@ Result HTTP::configureBearer(const char *apn){
 
   if (sendCmdAndWaitForResp(BEARER_PROFILE_GPRS, OK, 2000) == FALSE)
     result = ERROR_BEARER_PROFILE_GPRS;
-  
+
   char httpApn[64];
   sprintf(httpApn, BEARER_PROFILE_APN, apn);
   if (sendCmdAndWaitForResp(httpApn, OK, 2000) == FALSE)
     result = ERROR_BEARER_PROFILE_APN;
-  
+
   return result;
 }
 
@@ -143,7 +145,7 @@ Result HTTP::post(const char *uri, const char *body, char *response) {
 Result HTTP::get(const char *uri, char *response) {
 
   Result result = setHTTPSession(uri);
-  
+
   if (sendCmdAndWaitForResp(HTTP_GET, HTTP_200, 2000) == TRUE) {
     sendCmd(HTTP_READ);
     result = SUCCESS;
@@ -176,6 +178,11 @@ Result HTTP::setHTTPSession(const char *uri){
   if (sendCmdAndWaitForResp(httpPara, OK, 2000) == FALSE)
     result = ERROR_HTTP_PARA;
 
+  bool https = strncmp(HTTPS_PREFIX, uri, strlen(HTTPS_PREFIX)) == 0;
+  if (sendCmdAndWaitForResp(https ? HTTPS_ENABLE : HTTPS_DISABLE, OK, 2000) == FALSE) {
+    result = https ? ERROR_HTTPS_ENABLE : ERROR_HTTPS_DISABLE;
+  }
+
   if (sendCmdAndWaitForResp(HTTP_CONTENT, OK, 2000) == FALSE)
     result = ERROR_HTTP_CONTENT;
 
@@ -183,8 +190,8 @@ Result HTTP::setHTTPSession(const char *uri){
 }
 
 void HTTP::readResponse(char *response){
-  
-  char buffer[128];  
+
+  char buffer[128];
   cleanBuffer(buffer, sizeof(buffer));
   cleanBuffer(response, sizeof(response));
 
@@ -214,7 +221,7 @@ void HTTP::parseJSONResponse(const char *buffer, unsigned int bufferSize, char *
     }
     --j;
   }
-  
+
   for(int k = 0; k < (end_index - start_index) + 2; ++k){
     response[k] = buffer[start_index + k];
     response[k + 1] = '\0';
