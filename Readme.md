@@ -25,7 +25,6 @@ char response[256];
 Result result = http.get("your.api.com", response);
 
 Serial.println(response);
-// This prints the response body. Note that the response have to be a valid JSON
 
 http.disconnect();
 
@@ -45,7 +44,6 @@ char response[256];
 Result result = http.post("your.api.com", "{\"date\":\"12345678\"}", response);
 
 Serial.println(response);
-// This prints the response body. Note that the response have to be a valid JSON
 
 http.disconnect();
 ```
