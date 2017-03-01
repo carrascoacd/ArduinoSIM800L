@@ -129,6 +129,7 @@ void SIM800::sendEndMark(void)
 
 int SIM800::sendCmdAndWaitForResp(const char* cmd, const char *resp, unsigned timeout)
 {
+    delay(1000);
     sendCmd(cmd);
     return waitForResp(resp,timeout);
 }

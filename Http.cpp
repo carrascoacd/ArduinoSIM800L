@@ -89,10 +89,16 @@ Result HTTP::configureBearer(const char *apn){
 Result HTTP::connect() {
 
   Result result = SUCCESS;
+  unsigned int attempts = 0;
+  unsigned int MAX_ATTEMPTS = 10;
 
-  if (sendCmdAndWaitForResp(QUERY_BEARER, BEARER_OPEN, 2000) == FALSE){
-    if (sendCmdAndWaitForResp(OPEN_GPRS_CONTEXT, OK, 6000) == FALSE){
+  while (sendCmdAndWaitForResp(QUERY_BEARER, BEARER_OPEN, 2000) == FALSE && attempts < MAX_ATTEMPTS){
+    attempts ++;
+    if (sendCmdAndWaitForResp(OPEN_GPRS_CONTEXT, OK, 2000) == FALSE){
       result = ERROR_OPEN_GPRS_CONTEXT;
+    }
+    else {
+      result = SUCCESS;
     }
   }
 
@@ -128,7 +134,6 @@ Result HTTP::post(const char *uri, const char *body, char *response) {
   purgeSerial();
   delay(500);
   sendCmd(body);
-  delay(1000);
 
   if (sendCmdAndWaitForResp(HTTP_POST, HTTP_200, delayToDownload) == TRUE) {
     sendCmd(HTTP_READ);
