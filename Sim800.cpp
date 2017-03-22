@@ -90,7 +90,7 @@ void SIM800::sendCmd(const char* cmd)
 
 int SIM800::sendATTest(void)
 {
-    int ret = sendCmdAndWaitForResp("AT\r\n","OK",DEFAULT_TIMEOUT);
+    int ret = sendCmdAndWaitForResp("AT\r\n", "OK", DEFAULT_TIMEOUT);
     return ret;
 }
 
@@ -125,7 +125,6 @@ void SIM800::sendEndMark(void)
 {
     serialSIM800.println((char)26);
 }
-
 
 int SIM800::sendCmdAndWaitForResp(const char* cmd, const char *resp, unsigned timeout)
 {

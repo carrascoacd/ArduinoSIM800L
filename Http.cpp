@@ -47,6 +47,7 @@
 #define NORMAL_MODE "AT+CFUN=1,1\r\n"
 #define REGISTRATION_STATUS "AT+CREG?\r\n"
 #define SIGNAL_QUALITY "AT+CSQ\r\n"
+#define READ_VOLTAGE "AT+CBC\r\n"
 #define SLEEP_MODE "AT+CSCLK=1\r\n"
 
 #define OK "OK\r\n"
@@ -66,7 +67,8 @@ Result HTTP::configureBearer(const char *apn){
   sendATTest();
 
   while (sendCmdAndWaitForResp(REGISTRATION_STATUS, CONNECTED, 2000) != TRUE && attempts < MAX_ATTEMPTS){
-    sendCmdAndWaitForResp(SIGNAL_QUALITY, CONNECTED, 1000);
+    sendCmdAndWaitForResp(READ_VOLTAGE, OK, 1000);
+    sendCmdAndWaitForResp(SIGNAL_QUALITY, OK, 1000);
     attempts ++;
     delay(1000 * attempts);
     if (attempts == MAX_ATTEMPTS) {
