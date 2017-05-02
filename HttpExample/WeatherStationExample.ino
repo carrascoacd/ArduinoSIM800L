@@ -1,13 +1,15 @@
+#include <LowPower.h>
 #include <ArduinoJson.h>
 #include <Http.h>
 
 unsigned long lastRunTime = 0;
 unsigned long waitForRunTime = 0;
+unsigned long millisOffset = 0;
+unsigned int RX_PIN = 11;
+unsigned int TX_PIN = 12;
+unsigned int RST_PIN = 10;
+HTTP http(9600, RX_PIN, TX_PIN, RST_PIN, true);
 
-unsigned int RX_PIN = 7;
-unsigned int TX_PIN = 8;
-unsigned int RST_PIN = 12;
-HTTP http(9600, RX_PIN, TX_PIN, RST_PIN);
 /*
  * the setup routine runs once when you press reset:
  */
@@ -43,31 +45,25 @@ void print(const __FlashStringHelper *message, int code = -1){
   }
 }
 
+unsigned long currentMillis(){
+  return millis() + millisOffset;
+}
+
+void sleepEightSeconds(){
+  LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+  /* The 8000 is 8 seconds, the time the clock has been sleeping */
+  millisOffset += 8000;
+}
+
 bool shouldTrackTimeEntry(){
   /*
    * This calculation uses the max value the unsigned long can store as key. Remember when a negative number 
    * is assigned or the maximun is exceeded, then the module is applied to that value.
-   */
-  unsigned long elapsedTime = millis() - lastRunTime;
+   */ 
+  sleepEightSeconds();
+  unsigned long elapsedTime = currentMillis() - lastRunTime;
   print(F("Elapsed time: "), elapsedTime);
   return elapsedTime >= waitForRunTime;
-}
-
-void readVoltage(char *voltageBuffer){
-   /* 
-   * We are using a voltage divider, so the voltage in each resistence is calculated by:
-   * Vn = (Rn / R1 + .. + Rn) * Vt. In our example: V = (270/270 + 270) * 5V = 2.5v
-   */
-  int input = analogRead(0);    // Read the input pin. Possible values are betwen 0 (0v) to 1023 (5v)
-  float maximumBatterVoltage = 5.0;
-  float maximumAnalogicIput = 1023.0;
-  float dividedVoltage = maximumBatterVoltage * input / maximumAnalogicIput;
-  
-  float voltage = dividedVoltage * 2; // We use 2 because of our two resistences are equal
-   /*
-   * As the Arduino implementaion of sprintf does not support float values we need to convert it to char
-   */
-  dtostrf(voltage, 4, 2, voltageBuffer);
 }
 
 void trackTimeEntry(){
@@ -76,23 +72,24 @@ void trackTimeEntry(){
   char body[90];
   Result result;
 
-  print(F("Cofigure bearer: "), http.configureBearer("movistar.es"));
+  print(F("Cofigure bearer: "), http.configureBearer("your.apn"));
   result = http.connect();
   print(F("HTTP connect: "), result);
 
   unsigned int moisture = random(1023);
   char voltage[6];
-  readVoltage(voltage);
-  
-  sprintf(body, "[{\"weatherEntries\":[{\"moisture\": %d, \"currentVoltage\": %s}], \"name\": \"Arduino\"}]", moisture, voltage);
+  http.readVoltage(voltage);
+
+  sprintf(body, "[{\"weatherEntry\":[{\"m\": %d, \"cv\": %s}], \"n\": \"Arduino\"}]", moisture, voltage);
   Serial.println(body);
-  result = http.post("your.domain/api/devices", body, response);
+  
+  result = http.post("your.api", body, response);
   print(F("HTTP POST: "), result);
   if (result == SUCCESS) {
     Serial.println(response);
     StaticJsonBuffer<32> jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(response);
-    lastRunTime = millis();
+    lastRunTime = currentMillis();
     waitForRunTime = root["waitForRunTime"];
     
     print(F("Last run time: "), lastRunTime);

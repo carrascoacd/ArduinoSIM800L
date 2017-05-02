@@ -63,6 +63,7 @@ class HTTP : public SIM800 {
     Result post(const char *uri, const char *body, char *response);
     void sleep();
     void wakeUp();
+    void readVoltage(char *voltage);
 
   private:
     void readResponse(char *response);

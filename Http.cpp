@@ -173,6 +173,26 @@ void HTTP::wakeUp(){
   if (sendATTest() != TRUE) preInit();
 }
 
+void HTTP::readVoltage(char *voltage){
+  char buffer[64];
+  cleanBuffer(buffer, sizeof(buffer));
+  cleanBuffer(voltage, sizeof(voltage));
+
+  sendCmd(READ_VOLTAGE);
+
+  if (readBuffer(buffer, sizeof(buffer)) == TRUE){
+    char *twoPointsPointer = strchr(buffer, ':');
+    unsigned int twoPointsIndex = (int)(twoPointsPointer - buffer);
+    unsigned int voltageOffset = 7;
+    unsigned int voltageValueStartIndex = twoPointsIndex + voltageOffset;
+    unsigned int voltageSize = 4;
+    for (int i = voltageValueStartIndex; i < voltageValueStartIndex + voltageSize; ++i){
+      voltage[i - voltageValueStartIndex] = buffer[i];
+      voltage[i - voltageValueStartIndex + 1] = '\0';
+    }
+  }
+}
+
 Result HTTP::setHTTPSession(const char *uri){
 
   Result result;
