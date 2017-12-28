@@ -75,7 +75,7 @@ In order to perform a request, the library follows these steps:
 ##### HTTP POST:
   - AT+HTTPINIT -> wait for OK
   - AT+HTTPPARA="CID",1 -> wait for OK
-  - AT+HTTPPARA="URL","smartgarden.herokuapp.com" -> wait for OK
+  - AT+HTTPPARA="URL","your.api.com" -> wait for OK
 
   For example, if we have this body: {"location_id": 238, "fill_percent": 90}
 
