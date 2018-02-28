@@ -65,7 +65,7 @@ In order to perform a request, the library follows these steps:
 
   - AT+HTTPINIT -> wait for OK
   - AT+HTTPPARA="CID",1 -> wait for OK
-  - AT+HTTPPARA="URL","smartgarden.herokuapp.com"-> wait for OK
+  - AT+HTTPPARA="URL","your.api.com"-> wait for OK
   - AT+HTTPSSL=0 -> wait for OK (1 when URL starts with "https://")
   - AT+HTTPACTION=0 -> wait for 200
   - AT+HTTPREAD -> read buffer and parse it
