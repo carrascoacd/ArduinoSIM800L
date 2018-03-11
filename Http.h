@@ -2,7 +2,7 @@
  * Http.h
  * A HTTP library for the SIM800L board
  *
- * Copyright 2016 Antonio Carrasco
+ * Copyright 2018 Antonio Carrasco
  *
  * The MIT License (MIT)
  *

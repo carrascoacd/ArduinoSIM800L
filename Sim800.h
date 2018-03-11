@@ -3,7 +3,7 @@
  * A library for SeeedStudio seeeduino GPRS shield
  *
  * Original work Copyright (c) 2013 seeed technology inc. [lawliet zou]
- * Modified work Copyright 2016 Antonio Carrasco
+ * Modified work Copyright 2018 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
@@ -34,7 +34,6 @@
 
 #define TRUE                    1
 #define FALSE                   0
-
 #define DEFAULT_TIMEOUT         5000
 
 
@@ -95,7 +94,9 @@ public:
     void sendEndMark(void);
 
     /** check SIM800 module response before time out
-     *  @param  *resp   correct response which SIM800 module will return
+     *  @param  *resp   correct response which SIM800 module will return. A 'X' char
+     *  can be used to allow any char matching character, example:
+     *  '200' and '201' matches with '20X'
      *  @param  *timeout    waiting seconds till timeout
      *  @returns
      *      TRUE on success

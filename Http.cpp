@@ -2,7 +2,7 @@
  * Http.cpp
  * A HTTP library for the SIM800L board
  *
- * Copyright 2016 Antonio Carrasco
+ * Copyright 2018 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
@@ -52,7 +52,7 @@
 
 #define OK "OK\r\n"
 #define DOWNLOAD "DOWNLOAD"
-#define HTTP_200 ",200,"
+#define HTTP_2XX ",2XX,"
 #define HTTPS_PREFIX "https://"
 #define CONNECTED "+CREG: 0,1"
 #define BEARER_OPEN "+SAPBR: 1,1"
@@ -137,7 +137,7 @@ Result HTTP::post(const char *uri, const char *body, char *response) {
   delay(500);
   sendCmd(body);
 
-  if (sendCmdAndWaitForResp(HTTP_POST, HTTP_200, delayToDownload) == TRUE) {
+  if (sendCmdAndWaitForResp(HTTP_POST, HTTP_2XX, delayToDownload) == TRUE) {
     sendCmd(HTTP_READ);
     readResponse(response);
     result = SUCCESS;
@@ -153,7 +153,7 @@ Result HTTP::get(const char *uri, char *response) {
 
   Result result = setHTTPSession(uri);
 
-  if (sendCmdAndWaitForResp(HTTP_GET, HTTP_200, 2000) == TRUE) {
+  if (sendCmdAndWaitForResp(HTTP_GET, HTTP_2XX, 2000) == TRUE) {
     sendCmd(HTTP_READ);
     result = SUCCESS;
     readResponse(response);

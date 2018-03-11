@@ -3,7 +3,7 @@
  * A library for SeeedStudio seeeduino GPRS shield
  *
  * Original work Copyright (c) 2013 seeed technology inc. [lawliet zou]
- * Modified work Copyright 2016 Antonio Carrasco
+ * Modified work Copyright 2018 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
@@ -105,7 +105,7 @@ int SIM800::waitForResp(const char *resp, unsigned int timeout)
         if(serialSIM800.available()) {
             char c = serialSIM800.read();
             if (debugMode) Serial.print(c);
-            sum = (c==resp[sum]) ? sum+1 : 0;
+            sum = (c == resp[sum] || resp[sum] == 'X') ? sum+1 : 0;
             if(sum == len)break;
         }
         timerEnd = millis();
