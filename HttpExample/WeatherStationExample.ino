@@ -1,47 +1,60 @@
 #include <LowPower.h>
+#include <Servo.h>
 #include <ArduinoJson.h>
 #include <Http.h>
+
+#define RX_PIN 11
+#define TX_PIN 12
+#define RST_PIN 10
+#define MOISTURE_PIN 3
+#define SERVO_PIN 4
 
 unsigned long lastRunTime = 0;
 unsigned long waitForRunTime = 0;
 unsigned long millisOffset = 0;
-unsigned int RX_PIN = 11;
-unsigned int TX_PIN = 12;
-unsigned int RST_PIN = 10;
-HTTP http(9600, RX_PIN, TX_PIN, RST_PIN, true);
-
-/*
- * the setup routine runs once when you press reset:
- */
-void setup() {
-  Serial.begin(9600);
-  while(!Serial);
-  Serial.println("Starting!");
-}
-
-/*
- * the loop routine runs over and over again forever:
- */
-void loop() {
-  if (shouldTrackTimeEntry()){
-    http.wakeUp();
-    trackTimeEntry();
-  }
-  else {
-    http.sleep();
-  }
-}
+const bool DEBUG = false;
+const HTTP http(9600, RX_PIN, TX_PIN, RST_PIN, DEBUG);
+const Servo servo;
 
 /*
  * functions
  */
+
+void openValve(){
+  servo.attach(SERVO_PIN);
+  servo.write(14);
+  delay(1000);
+  servo.detach();
+}
+
+void closeValve(){
+  servo.attach(SERVO_PIN);
+  servo.write(90);
+  delay(1000);
+  servo.detach();
+}
+ 
 void print(const __FlashStringHelper *message, int code = -1){
-  if (code != -1){
-    Serial.print(message);
-    Serial.println(code);
+  if (DEBUG){
+    if (code != -1){
+      Serial.print(message);
+      Serial.println(code);
+    }
+    else {
+      Serial.println(message);
+    }
   }
-  else {
-    Serial.println(message);
+}
+
+void print(const char *message, int code = -1){
+  if (DEBUG){
+    if (code != -1){
+      Serial.print(message);
+      Serial.println(code);
+    }
+    else {
+      Serial.println(message);
+    }
   }
 }
 
@@ -55,46 +68,85 @@ void sleepEightSeconds(){
   millisOffset += 8000;
 }
 
-bool shouldTrackTimeEntry(){
+bool shouldTrackWeatherEntry(){
   /*
    * This calculation uses the max value the unsigned long can store as key. Remember when a negative number 
    * is assigned or the maximun is exceeded, then the module is applied to that value.
    */ 
-  sleepEightSeconds();
   unsigned long elapsedTime = currentMillis() - lastRunTime;
   print(F("Elapsed time: "), elapsedTime);
   return elapsedTime >= waitForRunTime;
 }
 
-void trackTimeEntry(){
+unsigned int readMoisture() {
+  unsigned long total = 0;
+  for (unsigned int i=0; i<100; ++i){
+    total += analogRead(MOISTURE_PIN);
+  }
+  return total/100;
+}
+
+void manageGarden(){
   
   char response[32];
   char body[90];
   Result result;
 
-  print(F("Cofigure bearer: "), http.configureBearer("your.apn"));
+  print(F("Cofigure bearer: "), http.configureBearer("bearer"));
   result = http.connect();
   print(F("HTTP connect: "), result);
 
-  unsigned int moisture = random(1023);
-  char voltage[6];
-  http.readVoltage(voltage);
+  // char voltage[6];
+  // http.readVoltage(voltage);
 
-  sprintf(body, "[{\"weatherEntry\":[{\"m\": %d, \"cv\": %s}], \"n\": \"Arduino\"}]", moisture, voltage);
-  Serial.println(body);
+  sprintf(body, "{\"w\":{\"m\": %d}}", readMoisture());
+  print(body);
   
-  result = http.post("your.api", body, response);
+  result = http.post("your.endpoint", body, response);
   print(F("HTTP POST: "), result);
+  print(F("HTTP disconnect: "), http.disconnect());
+  
   if (result == SUCCESS) {
-    Serial.println(response);
+    print(response);
     StaticJsonBuffer<32> jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(response);
-    lastRunTime = currentMillis();
-    waitForRunTime = root["waitForRunTime"];
     
-    print(F("Last run time: "), lastRunTime);
-    print(F("Next post in: "), waitForRunTime);
+    if (strcmp(root["action"], "open-valve") == 0){
+      print(F("Opening valve for: "), root["value"]);
+      openValve();
+      delay(root["value"]);
+      closeValve();
+    }
+    else {
+      lastRunTime = currentMillis();
+      print(F("Wait for run time: "), root["value"]);
+      waitForRunTime = root["value"];
+    }
   }
-  
-  print(F("HTTP disconnect: "), http.disconnect());
+}
+
+/*
+ * the setup routine runs once when you press reset:
+ */
+void setup() {
+  pinMode(MOISTURE_PIN, INPUT);
+  Serial.begin(9600);
+  while(!Serial);
+  print("Starting!");
+  openValve();
+  closeValve();
+}
+
+/*
+ * the loop routine runs over and over again forever:
+ */
+void loop() {
+  if (shouldTrackWeatherEntry()){
+    http.wakeUp();
+    manageGarden();
+  }
+  else {
+    http.sleep();
+    sleepEightSeconds();
+  }
 }
