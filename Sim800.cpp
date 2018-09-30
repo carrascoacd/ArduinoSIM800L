@@ -40,6 +40,7 @@ int SIM800::preInit(void)
     delay(3000);
 
     purgeSerial();
+    serialSIM800.flush();
 
     return TRUE;
 }
@@ -68,7 +69,7 @@ int SIM800::readBuffer(char *buffer, int count, unsigned int timeOut)
             break;
         }
     }
-    delay(500);
+
     while(serialSIM800.available()) {
         serialSIM800.read();
     }
@@ -85,7 +86,10 @@ void SIM800::cleanBuffer(char *buffer, int count)
 void SIM800::sendCmd(const char* cmd)
 {
     serialSIM800.listen();
+    serialSIM800.flush();
+    delay(500);
     serialSIM800.write(cmd);
+    serialSIM800.flush();
 }
 
 int SIM800::sendATTest(void)
@@ -128,7 +132,6 @@ void SIM800::sendEndMark(void)
 
 int SIM800::sendCmdAndWaitForResp(const char* cmd, const char *resp, unsigned timeout)
 {
-    delay(1000);
     sendCmd(cmd);
     return waitForResp(resp,timeout);
 }

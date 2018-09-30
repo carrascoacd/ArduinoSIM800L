@@ -134,7 +134,6 @@ Result HTTP::post(const char *uri, const char *body, char *response) {
   }
 
   purgeSerial();
-  delay(500);
   sendCmd(body);
 
   if (sendCmdAndWaitForResp(HTTP_POST, HTTP_2XX, delayToDownload) == TRUE) {
