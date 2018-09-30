@@ -17,12 +17,12 @@
 #define OPEN_VALVE_PIN 5
 #define LIPO_BATTERY_PIN 5
 #define LITIO_BATTERY_PIN 6
-#define ENDPOINT "https://your-endpoint"
+#define ENDPOINT "https://your.api"
 #define BODY_FORMAT "{\"w\":{\"m\": %d, \"t\": %d, \"h\": %d, \"mv\": %d, \"sv\": %d}}"
 //#define BEARER "gprs-service.com"
 //#define BEARER "movistar.es"
 #define BEARER "gprs-service.com"
-#define DEBUG 0
+#define DEBUG TRUE
 
 unsigned long waitForRunTime = 1;
 const HTTP http(9600, RX_PIN, TX_PIN, RST_PIN, DEBUG);
