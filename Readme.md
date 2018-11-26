@@ -19,7 +19,7 @@ unsigned int RX_PIN = 7;
 unsigned int TX_PIN = 8;
 unsigned int RST_PIN = 12;
 HTTP http(9600, RX_PIN, TX_PIN, RST_PIN);
-http.configureBearer("movistar.es");
+http.configureBearer("your.mobile.service.provider.apn");
 http.connect();
 
 char response[256];
@@ -38,7 +38,7 @@ unsigned int RX_PIN = 7;
 unsigned int TX_PIN = 8;
 unsigned int RST_PIN = 12;
 HTTP http(9600, RX_PIN, TX_PIN, RST_PIN);
-http.configureBearer("movistar.es");
+http.configureBearer("your.mobile.service.provider.apn");
 http.connect();
 
 char response[256];
