@@ -172,8 +172,9 @@ void HTTP::wakeUp(){
   if (sendATTest() != TRUE) preInit();
 }
 
-void HTTP::readVoltage(char *voltage){
+unsigned int HTTP::readVoltage(){
   char buffer[64];
+  char voltage[8];
   cleanBuffer(buffer, sizeof(buffer));
   cleanBuffer(voltage, sizeof(voltage));
 
@@ -190,6 +191,7 @@ void HTTP::readVoltage(char *voltage){
       voltage[i - voltageValueStartIndex + 1] = '\0';
     }
   }
+  return atoi(voltage);
 }
 
 Result HTTP::setHTTPSession(const char *uri){
