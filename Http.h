@@ -64,6 +64,8 @@ class HTTP : public SIM800 {
     void sleep();
     void wakeUp();
     unsigned int readVoltage();
+    void batteryState(char *voltage);
+    void gpsLocation(char *gps);
 
   private:
     void readResponse(char *response);
