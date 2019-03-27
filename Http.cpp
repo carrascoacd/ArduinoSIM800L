@@ -48,7 +48,9 @@
 #define REGISTRATION_STATUS "AT+CREG?\r\n"
 #define SIGNAL_QUALITY "AT+CSQ\r\n"
 #define READ_VOLTAGE "AT+CBC\r\n"
-#define SLEEP_MODE "AT+CSCLK=1\r\n"
+#define SLEEP_MODE "AT+CSCLK=2\r\n"
+#define READ_GPS "AT+CIPGSMLOC=1,1\r\n"
+
 
 #define OK "OK\r\n"
 #define DOWNLOAD "DOWNLOAD"
@@ -193,6 +195,47 @@ unsigned int HTTP::readVoltage(){
   }
   return atoi(voltage);
 }
+
+void HTTP::batteryState(char *voltage){
+  char buffer[64];
+  cleanBuffer(buffer, sizeof(buffer));
+  cleanBuffer(voltage, sizeof(voltage));
+
+  sendCmd(READ_VOLTAGE);
+
+  if (readBuffer(buffer, sizeof(buffer)) == TRUE){
+    char *twoPointsPointer = strchr(buffer, ':');
+    unsigned int twoPointsIndex = (int)(twoPointsPointer - buffer);
+    unsigned int voltageOffset = 4;
+    unsigned int voltageValueStartIndex = twoPointsIndex + voltageOffset;
+    unsigned int voltageSize = 2;
+    for (int i = voltageValueStartIndex; i < voltageValueStartIndex + voltageSize; ++i){
+      voltage[i - voltageValueStartIndex] = buffer[i];
+      voltage[i - voltageValueStartIndex + 1] = '\0';
+    }
+  }
+}
+
+void HTTP::gpsLocation(char *gps){
+  char buffer[80];
+  cleanBuffer(buffer, sizeof(buffer));
+  cleanBuffer(gps, sizeof(gps));
+
+  sendCmd(READ_GPS);
+
+  if (readBuffer(buffer, sizeof(buffer)) == TRUE){
+    char *twoPointsPointer = strchr(buffer, ':');
+    unsigned int twoPointsIndex = (int)(twoPointsPointer - buffer);
+    unsigned int gpsOffset = 4;
+    unsigned int gpsValueStartIndex = twoPointsIndex + gpsOffset;
+    unsigned int gpsSize = 19;
+    for (int i = gpsValueStartIndex; i < gpsValueStartIndex + gpsSize; ++i){
+      gps[i - gpsValueStartIndex] = buffer[i];
+      gps[i - gpsValueStartIndex + 1] = '\0';
+    }
+  }
+}
+
 
 Result HTTP::setHTTPSession(const char *uri){
 
