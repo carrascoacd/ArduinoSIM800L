@@ -48,7 +48,9 @@
 #define REGISTRATION_STATUS "AT+CREG?\r\n"
 #define SIGNAL_QUALITY "AT+CSQ\r\n"
 #define READ_VOLTAGE "AT+CBC\r\n"
-#define SLEEP_MODE "AT+CSCLK=2\r\n"
+#define SLEEP_MODE_2 "AT+CSCLK=2\r\n"
+#define SLEEP_MODE_1 "AT+CSCLK=1\r\n"
+#define SLEEP_MODE_0 "AT+CSCLK=0\r\n"
 #define READ_GPS "AT+CIPGSMLOC=1,1\r\n"
 
 
@@ -166,12 +168,18 @@ Result HTTP::get(const char *uri, char *response) {
   return result;
 }
 
-void HTTP::sleep(){
-  sendCmdAndWaitForResp(SLEEP_MODE, OK, 2000);
+void HTTP::sleep(bool force){
+  if (force){
+    sendCmdAndWaitForResp(SLEEP_MODE_1, OK, 2000);
+  }
+  else {
+    sendCmdAndWaitForResp(SLEEP_MODE_2, OK, 2000);
+  }
 }
 
 void HTTP::wakeUp(){
-  if (sendATTest() != TRUE) preInit();
+  preInit();
+  sendCmdAndWaitForResp(HTTP_GET, SLEEP_MODE_0, 2000);
 }
 
 unsigned int HTTP::readVoltage(){
@@ -183,20 +191,12 @@ unsigned int HTTP::readVoltage(){
   sendCmd(READ_VOLTAGE);
 
   if (readBuffer(buffer, sizeof(buffer)) == TRUE){
-    char *twoPointsPointer = strchr(buffer, ':');
-    unsigned int twoPointsIndex = (int)(twoPointsPointer - buffer);
-    unsigned int voltageOffset = 7;
-    unsigned int voltageValueStartIndex = twoPointsIndex + voltageOffset;
-    unsigned int voltageSize = 4;
-    for (int i = voltageValueStartIndex; i < voltageValueStartIndex + voltageSize; ++i){
-      voltage[i - voltageValueStartIndex] = buffer[i];
-      voltage[i - voltageValueStartIndex + 1] = '\0';
-    }
+    parseATResponse(buffer, 4, 7, voltage);
   }
   return atoi(voltage);
 }
 
-void HTTP::batteryState(char *voltage){
+void HTTP::readVoltagePercentage(char *voltage){
   char buffer[64];
   cleanBuffer(buffer, sizeof(buffer));
   cleanBuffer(voltage, sizeof(voltage));
@@ -204,19 +204,11 @@ void HTTP::batteryState(char *voltage){
   sendCmd(READ_VOLTAGE);
 
   if (readBuffer(buffer, sizeof(buffer)) == TRUE){
-    char *twoPointsPointer = strchr(buffer, ':');
-    unsigned int twoPointsIndex = (int)(twoPointsPointer - buffer);
-    unsigned int voltageOffset = 4;
-    unsigned int voltageValueStartIndex = twoPointsIndex + voltageOffset;
-    unsigned int voltageSize = 2;
-    for (int i = voltageValueStartIndex; i < voltageValueStartIndex + voltageSize; ++i){
-      voltage[i - voltageValueStartIndex] = buffer[i];
-      voltage[i - voltageValueStartIndex + 1] = '\0';
-    }
+    parseATResponse(buffer, 2, 4, voltage);
   }
 }
 
-void HTTP::gpsLocation(char *gps){
+void HTTP::readGpsLocation(char *gps){
   char buffer[80];
   cleanBuffer(buffer, sizeof(buffer));
   cleanBuffer(gps, sizeof(gps));
@@ -224,21 +216,11 @@ void HTTP::gpsLocation(char *gps){
   sendCmd(READ_GPS);
 
   if (readBuffer(buffer, sizeof(buffer)) == TRUE){
-    char *twoPointsPointer = strchr(buffer, ':');
-    unsigned int twoPointsIndex = (int)(twoPointsPointer - buffer);
-    unsigned int gpsOffset = 4;
-    unsigned int gpsValueStartIndex = twoPointsIndex + gpsOffset;
-    unsigned int gpsSize = 19;
-    for (int i = gpsValueStartIndex; i < gpsValueStartIndex + gpsSize; ++i){
-      gps[i - gpsValueStartIndex] = buffer[i];
-      gps[i - gpsValueStartIndex + 1] = '\0';
-    }
+    parseATResponse(buffer, 19, 4, gps);
   }
 }
 
-
 Result HTTP::setHTTPSession(const char *uri){
-
   Result result;
   if (sendCmdAndWaitForResp(HTTP_CID, OK, 2000) == FALSE)
     result = ERROR_HTTP_CID;
@@ -261,7 +243,6 @@ Result HTTP::setHTTPSession(const char *uri){
 }
 
 void HTTP::readResponse(char *response){
-
   char buffer[128];
   cleanBuffer(buffer, sizeof(buffer));
   cleanBuffer(response, sizeof(response));
@@ -272,7 +253,6 @@ void HTTP::readResponse(char *response){
 }
 
 void HTTP::parseJSONResponse(const char *buffer, unsigned int bufferSize, char *response){
-
   int start_index = 0;
   int i = 0;
   while (i < bufferSize - 1 && start_index == 0) {
@@ -296,5 +276,15 @@ void HTTP::parseJSONResponse(const char *buffer, unsigned int bufferSize, char *
   for(int k = 0; k < (end_index - start_index) + 2; ++k){
     response[k] = buffer[start_index + k];
     response[k + 1] = '\0';
+  }
+}
+
+void HTTP::parseATResponse(const char *buffer, unsigned int size, unsigned int offset, char *response){
+  char *twoPointsPointer = strchr(buffer, ':');
+  unsigned int twoPointsIndex = (int)(twoPointsPointer - buffer);
+  unsigned int valueStartIndex = twoPointsIndex + offset;
+  for (int i = valueStartIndex; i < valueStartIndex + size; ++i){
+    response[i - valueStartIndex] = buffer[i];
+    response[i - valueStartIndex + 1] = '\0';
   }
 }

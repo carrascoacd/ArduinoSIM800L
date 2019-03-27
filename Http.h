@@ -61,14 +61,15 @@ class HTTP : public SIM800 {
     Result disconnect();
     Result get(const char *uri, char *response);
     Result post(const char *uri, const char *body, char *response);
-    void sleep();
+    void sleep(bool force = FALSE);
     void wakeUp();
     unsigned int readVoltage();
-    void batteryState(char *voltage);
-    void gpsLocation(char *gps);
+    void readVoltagePercentage(char *voltage);
+    void readGpsLocation(char *gps);
 
   private:
     void readResponse(char *response);
     Result setHTTPSession(const char *uri);
     void parseJSONResponse(const char *buffer, unsigned int bufferSize, char *response);
+    void parseATResponse(const char *buffer, unsigned int size, unsigned int offset, char *response);
 };
