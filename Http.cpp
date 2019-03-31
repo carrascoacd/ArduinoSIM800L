@@ -26,6 +26,7 @@
  */
 
 #include "Http.h"
+#include "Parser.h"
 #include <string.h>
 
 #define BEARER_PROFILE_GPRS "AT+SAPBR=3,1,\"Contype\",\"GPRS\"\r\n"
@@ -52,13 +53,12 @@
 #define SLEEP_MODE_1 "AT+CSCLK=1\r\n"
 #define SLEEP_MODE_0 "AT+CSCLK=0\r\n"
 #define READ_GPS "AT+CIPGSMLOC=1,1\r\n"
-
-
 #define OK "OK\r\n"
 #define DOWNLOAD "DOWNLOAD"
 #define HTTP_2XX ",2XX,"
 #define HTTPS_PREFIX "https://"
 #define CONNECTED "+CREG: 0,1"
+#define ROAMING "+CREG: 0,5"
 #define BEARER_OPEN "+SAPBR: 1,1"
 
 Result HTTP::configureBearer(const char *apn){
@@ -70,7 +70,9 @@ Result HTTP::configureBearer(const char *apn){
 
   sendATTest();
 
-  while (sendCmdAndWaitForResp(REGISTRATION_STATUS, CONNECTED, 2000) != TRUE && attempts < MAX_ATTEMPTS){
+  while ((sendCmdAndWaitForResp(REGISTRATION_STATUS, CONNECTED, 2000) != TRUE ||
+          sendCmdAndWaitForResp(REGISTRATION_STATUS, ROAMING, 2000) != TRUE)
+            && attempts < MAX_ATTEMPTS){
     sendCmdAndWaitForResp(READ_VOLTAGE, OK, 1000);
     sendCmdAndWaitForResp(SIGNAL_QUALITY, OK, 1000);
     attempts ++;
@@ -249,42 +251,5 @@ void HTTP::readResponse(char *response){
 
   if (readBuffer(buffer, sizeof(buffer)) == TRUE){
     parseJSONResponse(buffer, sizeof(buffer), response);
-  }
-}
-
-void HTTP::parseJSONResponse(const char *buffer, unsigned int bufferSize, char *response){
-  int start_index = 0;
-  int i = 0;
-  while (i < bufferSize - 1 && start_index == 0) {
-    char c = buffer[i];
-    if ('{' == c){
-      start_index = i;
-    }
-    ++i;
-  }
-
-  int end_index = 0;
-  int j = bufferSize - 1;
-  while (j >= 0 && end_index == 0) {
-    char c = buffer[j];
-    if ('}' == c) {
-      end_index = j;
-    }
-    --j;
-  }
-
-  for(int k = 0; k < (end_index - start_index) + 2; ++k){
-    response[k] = buffer[start_index + k];
-    response[k + 1] = '\0';
-  }
-}
-
-void HTTP::parseATResponse(const char *buffer, unsigned int size, unsigned int offset, char *response){
-  char *twoPointsPointer = strchr(buffer, ':');
-  unsigned int twoPointsIndex = (int)(twoPointsPointer - buffer);
-  unsigned int valueStartIndex = twoPointsIndex + offset;
-  for (int i = valueStartIndex; i < valueStartIndex + size; ++i){
-    response[i - valueStartIndex] = buffer[i];
-    response[i - valueStartIndex + 1] = '\0';
   }
 }
