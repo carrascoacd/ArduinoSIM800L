@@ -1,8 +1,8 @@
 /*
  * Http.h
- * A HTTP library for the SIM800L board
+ * HTTP library for the SIM800L board
  *
- * Copyright 2018 Antonio Carrasco
+ * Copyright 2019 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
@@ -24,6 +24,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+#ifndef __HTTP_H__
+#define __HTTP_H__
 
 #include "Sim800.h"
 
@@ -65,11 +68,10 @@ class HTTP : public SIM800 {
     void wakeUp();
     unsigned int readVoltage();
     void readVoltagePercentage(char *voltage);
-    void readGpsLocation(char *gps);
 
   private:
     void readResponse(char *response);
     Result setHTTPSession(const char *uri);
-    void parseJSONResponse(const char *buffer, unsigned int bufferSize, char *response);
-    void parseATResponse(const char *buffer, unsigned int size, unsigned int offset, char *response);
 };
+
+#endif
