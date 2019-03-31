@@ -183,7 +183,7 @@ void HTTP::wakeUp(){
 }
 
 unsigned int HTTP::readVoltage(){
-  char buffer[64];
+  char buffer[32];
   char voltage[8];
   cleanBuffer(buffer, sizeof(buffer));
   cleanBuffer(voltage, sizeof(voltage));
@@ -197,7 +197,7 @@ unsigned int HTTP::readVoltage(){
 }
 
 void HTTP::readVoltagePercentage(char *voltage){
-  char buffer[64];
+  char buffer[32];
   cleanBuffer(buffer, sizeof(buffer));
   cleanBuffer(voltage, sizeof(voltage));
 
