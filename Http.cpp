@@ -68,7 +68,7 @@ Result HTTP::configureBearer(const char *apn){
 
   sendATTest();
 
-  while ((sendCmdAndWaitForResp(REGISTRATION_STATUS, CONNECTED, 2000) != TRUE ||
+  while ((sendCmdAndWaitForResp(REGISTRATION_STATUS, CONNECTED, 2000) != TRUE &&
           sendCmdAndWaitForResp(REGISTRATION_STATUS, ROAMING, 2000) != TRUE)
             && attempts < MAX_ATTEMPTS){
     sendCmdAndWaitForResp(READ_VOLTAGE, OK, 1000);
