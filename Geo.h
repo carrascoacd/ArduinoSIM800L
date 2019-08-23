@@ -29,11 +29,12 @@
 #ifndef __GEO_H__
 #define __GEO_H__
 
-#include "Http.h"
+#include "Sim800.h"
 
-class Geo : public HTTP {
+class Geo : public SIM800 {
 
   public:
+    Geo(unsigned int baudRate, unsigned int rxPin, unsigned int txPin, unsigned int rstPin, bool debug = TRUE):SIM800(baudRate, rxPin, txPin, rstPin, debug){};
     void readGpsLocation(char *gps);
 };
 
