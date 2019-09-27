@@ -196,8 +196,9 @@ unsigned int HTTP::readVoltage(){
   return atoi(voltage);
 }
 
-void HTTP::readVoltagePercentage(char *voltage){
+unsigned int HTTP::readVoltagePercentage(){
   char buffer[32];
+  char voltage[8];  
   cleanBuffer(buffer, sizeof(buffer));
   cleanBuffer(voltage, sizeof(voltage));
 
@@ -206,6 +207,20 @@ void HTTP::readVoltagePercentage(char *voltage){
   if (readBuffer(buffer, sizeof(buffer)) == TRUE){
     parseATResponse(buffer, 2, 4, voltage);
   }
+  return atoi(voltage);  
+}
+
+unsigned int HTTP::readSignalStrength(){
+  char buffer[32];
+  char signals[8];
+  cleanBuffer(buffer, sizeof(buffer));
+  cleanBuffer(signals, sizeof(signals));
+
+  sendCmd(SIGNAL_QUALITY);
+  if (readBuffer(buffer, sizeof(buffer)) == TRUE){
+    parseATResponse(buffer, 2, 2, signals);
+  }
+  return atoi(signals);
 }
 
 Result HTTP::setHTTPSession(const char *uri){
