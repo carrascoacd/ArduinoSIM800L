@@ -67,7 +67,8 @@ class HTTP : public SIM800 {
     void sleep(bool force = FALSE);
     void wakeUp();
     unsigned int readVoltage();
-    void readVoltagePercentage(char *voltage);
+    unsigned int readVoltagePercentage();
+    unsigned int readSignalStrength();
 
   private:
     void readResponse(char *response);
