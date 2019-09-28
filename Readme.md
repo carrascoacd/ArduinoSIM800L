@@ -3,9 +3,9 @@
 A smart HTTP library based on Seeeduino that implements the AT HTTP commands to perform GET and POST requests to a JSON API.
 
 ## Support
-* Your board have to support the standard SoftwareSerial library. It doesn't  work with HardwareSerial based boards for the moment.
-* The API response have to be a valid JSON.
-* The library has been tested again Arduino Uno and Arduino Nano
+* Your board has to support the standard SoftwareSerial library. It doesn't work with HardwareSerial based boards for the moment.
+* The API response format has to be a valid JSON.
+* The library has been tested against Arduino Uno and Arduino Nano.
 
 ## Instalation
 Download the library and then import it.
