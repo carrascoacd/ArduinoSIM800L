@@ -121,7 +121,10 @@ public:
 
     void purgeSerial();
 
-private:
+    void write(const char* data);
+    void write(const char* data, unsigned int size);
+
+protected:
 
     SoftwareSerial serialSIM800;
     bool debugMode;

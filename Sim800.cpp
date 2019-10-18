@@ -88,7 +88,7 @@ void SIM800::sendCmd(const char* cmd)
     serialSIM800.listen();
     serialSIM800.flush();
     delay(500);
-    serialSIM800.write(cmd);
+    write(cmd);
     serialSIM800.flush();
 }
 
@@ -151,4 +151,16 @@ void SIM800::serialDebug(void)
 void SIM800::purgeSerial()
 {
   while (serialSIM800.available()) serialSIM800.read();
+}
+
+void SIM800::write(const char* data)
+{
+    serialSIM800.listen();
+    serialSIM800.write(data);
+}
+
+void SIM800::write(const char* data, unsigned int size)
+{
+    serialSIM800.listen();
+    serialSIM800.write(data, size);
 }

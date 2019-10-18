@@ -108,8 +108,8 @@ Result HTTP::connect() {
     }
   }
 
-  if (sendCmdAndWaitForResp(HTTP_INIT, OK, 2000) == FALSE)
-    result = ERROR_HTTP_INIT;
+  //if (sendCmdAndWaitForResp(HTTP_INIT, OK, 2000) == FALSE)
+  //  result = ERROR_HTTP_INIT;
 
   return result;
 }
@@ -165,6 +165,58 @@ Result HTTP::get(const char *uri, char *response) {
     result = ERROR_HTTP_GET;
   }
 
+  return result;
+}
+
+Result HTTP::putBegin(const char *fileName, 
+                      const char *server, 
+                      const char *usr, 
+                      const char *pass,
+                      const char *path){
+  Result result;
+
+  char buffer[64];
+
+  sendCmdAndWaitForResp("AT+FTPCID=1\r\n", OK, 2000);
+
+  sprintf(buffer, "AT+FTPSERV=\"%s\"\r\n", server);
+  sendCmdAndWaitForResp(buffer, OK, 2000);
+
+  //sendCmdAndWaitForResp("AT+FTPPORT=21\r\n", OK, 2000);
+  //sendCmdAndWaitForResp("AT+FTPSSL=2\r\n", OK, 2000);
+
+  sprintf(buffer, "AT+FTPUN=\"%s\"\r\n", usr);
+  sendCmdAndWaitForResp(buffer, OK, 20000);
+
+  sprintf(buffer, "AT+FTPPW=\"%s\"\r\n", pass);
+  sendCmdAndWaitForResp(buffer, OK, 20000);
+  
+  sprintf(buffer, "AT+FTPPUTNAME=\"%s\"\r\n", fileName);
+  sendCmdAndWaitForResp(buffer, OK, 20000);
+
+  sprintf(buffer, "AT+FTPPUTPATH=\"%s\"\r\n", path);
+  sendCmdAndWaitForResp(buffer, OK, 20000);
+  sendCmdAndWaitForResp("AT+FTPPUT=1\r\n", "1,1", 20000);
+
+  return result;
+}
+
+Result HTTP::putWrite(const char *data, unsigned int size){
+  Result result;
+
+  char ftpUpload[32];
+  sprintf(ftpUpload, "AT+FTPPUT=2,%d\r\n", size);
+  sendCmdAndWaitForResp(ftpUpload, "+FTPPUT: 2", 20000);
+
+  write(data, size);
+  waitForResp("1,1", 20000);
+  return result;
+}
+
+Result HTTP::putEnd(){
+  Result result;
+  serialSIM800.flush();
+  sendCmdAndWaitForResp("AT+FTPPUT=2,0\r\n", "1,0", 20000);
   return result;
 }
 

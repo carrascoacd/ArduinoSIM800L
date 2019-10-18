@@ -64,6 +64,13 @@ class HTTP : public SIM800 {
     Result disconnect();
     Result get(const char *uri, char *response);
     Result post(const char *uri, const char *body, char *response);
+    Result putBegin(const char *fileName, 
+                      const char *server, 
+                      const char *usr, 
+                      const char *pass,
+                      const char *path = "/");
+    Result putWrite(const char *data, unsigned int size);
+    Result putEnd();
     void sleep(bool force = FALSE);
     void wakeUp();
     unsigned int readVoltage();
