@@ -59,6 +59,22 @@
 #define ROAMING "+CREG: 0,5"
 #define BEARER_OPEN "+SAPBR: 1,1"
 
+// FTP 
+const char AT_FTPCID[] PROGMEM = "AT+FTPCID=1\r\n";
+const char AT_FTPSERV[] PROGMEM = "AT+FTPSERV=\"%s\"\r\n";
+const char AT_FTPUN[] PROGMEM = "AT+FTPUN=\"%s\"\r\n";
+const char AT_FTPPW[] PROGMEM = "AT+FTPPW=\"%s\"\r\n";
+const char AT_FTPPUTNAME[] PROGMEM = "AT+FTPPUTNAME=\"%s\"\r\n";
+const char AT_FTPPUTPATH[] PROGMEM = "AT+FTPPUTPATH=\"%s\"\r\n";
+const char AT_FTPPUT1[] PROGMEM = "AT+FTPPUT=1\r\n";
+const char AT_FTPPUT2[] PROGMEM = "AT+FTPPUT=2,%d\r\n";
+const char AT_FTPPUT20[] PROGMEM = "AT+FTPPUT=2,0\r\n";  
+
+const char OK_1[] PROGMEM = "OK\r\n";
+const char AT_FTPPUT1_RESP[] PROGMEM = "1,1";
+const char AT_FTPPUT2_RESP[] PROGMEM = "+FTPPUT: 2";
+const char AT_FTPPUT20_RESP[] PROGMEM = "1,0";
+
 Result HTTP::configureBearer(const char *apn){
 
   Result result = SUCCESS;
@@ -176,27 +192,49 @@ Result HTTP::putBegin(const char *fileName,
   Result result;
 
   char buffer[64];
+  char resp[12];
 
-  sendCmdAndWaitForResp("AT+FTPCID=1\r\n", OK, 2000);
+  strcpy_P(buffer, AT_FTPCID);
+  strcpy_P(resp, OK_1);
+  if(sendCmdAndWaitForResp(buffer, resp, 20000) == FALSE){
+    return ERROR_FTPCID;
+  }
 
-  sprintf(buffer, "AT+FTPSERV=\"%s\"\r\n", server);
-  sendCmdAndWaitForResp(buffer, OK, 2000);
+  sprintf_P(buffer, AT_FTPSERV, server);
+  strcpy_P(resp, OK_1);
+  if(sendCmdAndWaitForResp(buffer, resp, 20000) == FALSE){
+    return ERROR_FTPSERV;
+  }
 
-  //sendCmdAndWaitForResp("AT+FTPPORT=21\r\n", OK, 2000);
-  //sendCmdAndWaitForResp("AT+FTPSSL=2\r\n", OK, 2000);
+  sprintf_P(buffer, AT_FTPUN, usr);
+  strcpy_P(resp, OK_1);
+  if(sendCmdAndWaitForResp(buffer, resp, 20000) == FALSE){
+    return ERROR_FTPUN;
+  }
 
-  sprintf(buffer, "AT+FTPUN=\"%s\"\r\n", usr);
-  sendCmdAndWaitForResp(buffer, OK, 20000);
-
-  sprintf(buffer, "AT+FTPPW=\"%s\"\r\n", pass);
-  sendCmdAndWaitForResp(buffer, OK, 20000);
+  sprintf_P(buffer, AT_FTPPW, pass);
+  strcpy_P(resp, OK_1);
+  if(sendCmdAndWaitForResp(buffer, resp, 20000) == FALSE){
+    return ERROR_FTPPW;
+  }
   
-  sprintf(buffer, "AT+FTPPUTNAME=\"%s\"\r\n", fileName);
-  sendCmdAndWaitForResp(buffer, OK, 20000);
+  sprintf_P(buffer, AT_FTPPUTNAME, fileName);
+  strcpy_P(resp, OK_1);
+  if(sendCmdAndWaitForResp(buffer, resp, 20000) == FALSE){
+    return ERROR_FTPPUTNAME;
+  }
 
-  sprintf(buffer, "AT+FTPPUTPATH=\"%s\"\r\n", path);
-  sendCmdAndWaitForResp(buffer, OK, 20000);
-  sendCmdAndWaitForResp("AT+FTPPUT=1\r\n", "1,1", 20000);
+  sprintf_P(buffer, AT_FTPPUTPATH, path);
+  strcpy_P(resp, OK_1);
+  if(sendCmdAndWaitForResp(buffer, resp, 20000) == FALSE){
+    return ERROR_FTPPUTPATH;
+  }
+
+  strcpy_P(buffer, AT_FTPPUT1);
+  strcpy_P(resp, AT_FTPPUT1_RESP);
+  if(sendCmdAndWaitForResp(buffer, resp, 20000) == FALSE){
+    return ERROR_FTPPUT1;
+  }
 
   return result;
 }
@@ -204,19 +242,36 @@ Result HTTP::putBegin(const char *fileName,
 Result HTTP::putWrite(const char *data, unsigned int size){
   Result result;
 
-  char ftpUpload[32];
-  sprintf(ftpUpload, "AT+FTPPUT=2,%d\r\n", size);
-  sendCmdAndWaitForResp(ftpUpload, "+FTPPUT: 2", 20000);
+  char buffer[32];
+  char resp[32];
 
-  write(data, size);
-  waitForResp("1,1", 20000);
+  sprintf_P(buffer, AT_FTPPUT2, size);
+  strcpy_P(resp, AT_FTPPUT2_RESP);
+  if(sendCmdAndWaitForResp(buffer, resp, 2000) == FALSE){
+    return ERROR_FTPPUT2;
+  }
+  else {
+    write(data, size);
+    
+    strcpy_P(resp, AT_FTPPUT1_RESP);
+    waitForResp(resp, 2000);
+  }
+
   return result;
 }
 
 Result HTTP::putEnd(){
   Result result;
   serialSIM800.flush();
-  sendCmdAndWaitForResp("AT+FTPPUT=2,0\r\n", "1,0", 20000);
+
+  char buffer[32];
+  char resp[12];
+
+  strcpy_P(buffer, AT_FTPPUT20);
+  strcpy_P(resp, AT_FTPPUT20_RESP);
+  if(sendCmdAndWaitForResp(AT_FTPPUT20, AT_FTPPUT20_RESP, 2000) == FALSE){
+    return ERROR_FTPPUT20;
+  }
   return result;
 }
 

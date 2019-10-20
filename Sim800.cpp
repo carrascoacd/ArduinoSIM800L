@@ -136,6 +136,15 @@ int SIM800::sendCmdAndWaitForResp(const char* cmd, const char *resp, unsigned ti
     return waitForResp(resp,timeout);
 }
 
+int SIM800::sendCmdAndWaitForResp2(const char* cmd, const char *resp, unsigned timeout){
+    char cmdBuff[120];
+    char respBuff[32];
+    strcpy_P(cmdBuff, cmd);
+    strcpy_P(respBuff, resp);
+    sendCmd(cmdBuff);
+    return waitForResp(respBuff, timeout);
+}
+
 void SIM800::serialDebug(void)
 {
     while(1) {

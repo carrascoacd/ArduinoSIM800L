@@ -113,7 +113,7 @@ public:
      *      ERROR on error
      */
     int sendCmdAndWaitForResp(const char* cmd, const char *resp, unsigned timeout);
-
+    int sendCmdAndWaitForResp2(const char* cmd, const char *resp, unsigned timeout);
 
     /** used for serial debug, you can specify tx and rx pin and then communicate with GPRS module with common AT commands
      */
