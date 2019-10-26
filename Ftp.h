@@ -1,6 +1,6 @@
 /*
- * Parser.cpp
- * Parser module to deal with parsing
+ * Ftp.h
+ * FTP library for the SIM800L board
  *
  * Copyright 2019 Antonio Carrasco
  *
@@ -25,50 +25,29 @@
  * THE SOFTWARE.
  */
 
-#include "Parser.h"
-#include <string.h>
+#ifndef __FTP_H__
+#define __FTP_H__
 
-void parseATResponse(const char *buffer, unsigned int size, unsigned int offset, char *response)
+#include "Sim800.h"
+#include "Result.h"
+
+class FTP : public SIM800
 {
-  const char *twoPointsPointer = strchr(buffer, ':');
-  unsigned int twoPointsIndex = (int)(twoPointsPointer - buffer);
-  unsigned int valueStartIndex = twoPointsIndex + offset;
-  for (int i = valueStartIndex; i < valueStartIndex + size; ++i)
-  {
-    response[i - valueStartIndex] = buffer[i];
-    response[i - valueStartIndex + 1] = '\0';
-  }
-}
 
-void parseJSONResponse(const char *buffer, unsigned int bufferSize, char *response)
-{
-  int start_index = 0;
-  int i = 0;
-  while (i < bufferSize - 1 && start_index == 0)
-  {
-    char c = buffer[i];
-    if ('{' == c)
-    {
-      start_index = i;
-    }
-    ++i;
-  }
+public:
+  FTP(unsigned int baudRate,
+      unsigned int rxPin,
+      unsigned int txPin,
+      unsigned int rstPin,
+      bool debug = TRUE) : SIM800(baudRate, rxPin, txPin, rstPin, debug){};
+  Result configureBearer(const char *apn);
+  Result putBegin(const char *fileName,
+                  const char *server,
+                  const char *usr,
+                  const char *pass,
+                  const char *path = "/");
+  Result putWrite(const char *data, unsigned int size);
+  Result putEnd();
+};
 
-  int end_index = 0;
-  int j = bufferSize - 1;
-  while (j >= 0 && end_index == 0)
-  {
-    char c = buffer[j];
-    if ('}' == c)
-    {
-      end_index = j;
-    }
-    --j;
-  }
-
-  for (int k = 0; k < (end_index - start_index) + 2; ++k)
-  {
-    response[k] = buffer[start_index + k];
-    response[k + 1] = '\0';
-  }
-}
+#endif

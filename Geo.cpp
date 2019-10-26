@@ -31,14 +31,16 @@
 
 #define READ_GPS "AT+CIPGSMLOC=1,1\r\n"
 
-void Geo::readGpsLocation(char *gps){
+void Geo::readGpsLocation(char *gps)
+{
   char buffer[80];
   cleanBuffer(buffer, sizeof(buffer));
   cleanBuffer(gps, sizeof(gps));
 
   sendCmd(READ_GPS);
 
-  if (readBuffer(buffer, sizeof(buffer)) == TRUE){
+  if (readBuffer(buffer, sizeof(buffer)) == TRUE)
+  {
     parseATResponse(buffer, 19, 4, gps);
   }
 }

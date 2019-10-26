@@ -1,63 +1,72 @@
-
 #include <ArduinoJson.h>
 #include <Http.h>
+#include <Ftp.h>
 #include <DHT.h>
-#include <Battery.h>
 #include <LowPower.h>
-#include <NewPing.h>
+#include <SD.h>
+//#include <Battery.h>
 
-#define TRIGGER_PIN 7
-#define ECHO_PIN 8
-#define MAX_DISTANCE 100
-#define RST_PIN 11
-#define RX_PIN 10
-#define TX_PIN 9
 #define MOISTURE_PIN 1
 #define TEMPERATURE_HUMIDITY_PIN 6
-#define DHTTYPE DHT11
-#define OPEN_VALVE_PIN 5
-#define OPEN_VALVE_VIN_PIN 4
+#define OPEN_VALVE_PIN 4
+#define CLOSE_VALVE_PIN 5
 #define LITIO_BATTERY_PIN 0
-//#define BEARER "movistar.es"
-#define BEARER "gprs-service.com"
+#define SD_CS_PIN 3
+#define RST_PIN 8
+#define RX_PIN 10
+#define TX_PIN 9
+
 #define MAX_VOLTAGE 4200
 #define MIN_VOLTAGE 3500
+#define BAUD_RATE 19200
+#define MAX_RETRIES 10
+
 #define DEBUG TRUE
+#define DHTTYPE DHT11
 
-const char ENDPOINT[] = {"https://your.api"};
-const char BODY_FORMAT[] PROGMEM = {"{\"w\":{\"m\": %d, \"t\": %d, \"h\": %d, \"mv\": %d, \"sv\": %d, \"v\": %d}}"};
+//#define BEARER "movistar.es"
+#define BEARER "gprs-service.com"
+#define FTP_SERVER "34.255.8.59"
+//#define FTP_SERVER "ftp.drivehq.com"
+#define FTP_USER "user"
+#define FTP_PASS "password"
 
-const PROGMEM HTTP http(9600, RX_PIN, TX_PIN, RST_PIN, DEBUG);
-const PROGMEM DHT dht(TEMPERATURE_HUMIDITY_PIN, DHTTYPE);
-const PROGMEM Battery litioBattery(MIN_VOLTAGE, MAX_VOLTAGE, LITIO_BATTERY_PIN);
-const PROGMEM NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+#define CLOSE_VALVE_STATE 0
+#define OPEN_VALVE_STATE 1
+
+//const PROGMEM Battery litio(MIN_VOLTAGE, MAX_VOLTAGE, LITIO_BATTERY_PIN);
 
 unsigned long timeToSleep = 0;
-unsigned long starToSleepTime = 0;
+unsigned long elapsedTime = 0;
+unsigned int retries = 0;
+bool currentState = CLOSE_VALVE_STATE;
 
 /*
  * functions
  */
-void openValve(){
-  Serial.print(F("Open valve"));
-  
-  pinMode(OPEN_VALVE_VIN_PIN, OUTPUT);
-  pinMode(OPEN_VALVE_PIN, OUTPUT);
-  digitalWrite(OPEN_VALVE_PIN, HIGH);
-  delay(15000);
-  pinMode(OPEN_VALVE_VIN_PIN, INPUT);
-  pinMode(OPEN_VALVE_PIN, INPUT);
-}
 
-void closeValve(){
-  Serial.println(F("Close Valve"));
+void(*resetArudino) (void) = 0;
+ 
+void openValve(){
+  Serial.print(F("Open valve. "));
   
-  pinMode(OPEN_VALVE_VIN_PIN, OUTPUT);
   pinMode(OPEN_VALVE_PIN, OUTPUT);
   digitalWrite(OPEN_VALVE_PIN, LOW);
   delay(15000);
-  pinMode(OPEN_VALVE_VIN_PIN, INPUT);
   pinMode(OPEN_VALVE_PIN, INPUT);
+
+  //valveIsOpen() ? Serial.println(F("Open")) : Serial.println(F("Closed"));
+}
+
+void closeValve(){
+  Serial.print(F("Close Valve. "));
+  
+  pinMode(CLOSE_VALVE_PIN, OUTPUT);
+  digitalWrite(CLOSE_VALVE_PIN, LOW);
+  delay(15000);
+  pinMode(CLOSE_VALVE_PIN, INPUT);
+
+  //valveIsOpen() ? Serial.println(F("Open")) : Serial.println(F("Closed"));
 }
 
 void openValveFor(unsigned long milliseconds){
@@ -74,33 +83,112 @@ unsigned int readMoisture() {
   return total/100;
 }
 
-bool rightVoltage(unsigned int voltage){
-  return voltage >= MIN_VOLTAGE;
+unsigned int readHumidity(){
+  DHT dht(TEMPERATURE_HUMIDITY_PIN, DHTTYPE);
+  dht.begin();
+  return dht.readHumidity();
 }
 
-bool shouldSleep(){
-  return millis() - starToSleepTime <= timeToSleep;
+unsigned int readTemperature(){
+  DHT dht(TEMPERATURE_HUMIDITY_PIN, DHTTYPE);
+  dht.begin();
+  return dht.readTemperature();
 }
 
-//int availableMemory() 
-//{
-// int size = 1024;
-// byte *buf;
-//
-// while ((buf = (byte *) malloc(--size)) == NULL)
-//   ;
-//
-// free(buf);
-//
-// return size;
+unsigned int readLitioVoltage() {
+  long result;
+  // Read 1.1V reference against AVcc
+  ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  delay(2); // Wait for Vref to settle
+  ADCSRA |= _BV(ADSC); // Convert
+  while (bit_is_set(ADCSRA,ADSC));
+  result = ADCL;
+  result |= ADCH<<8;
+  result = 1125300L / result; // Back-calculate AVcc in mV
+  return result;
+}
+
+//unsigned int readLitioVoltage(){
+//  unsigned int voltage = 0;
+//  for (unsigned int i=0; i<100; ++i){
+//    unsigned int cv = litio.voltage();
+//    if (cv > voltage){
+//      voltage = cv;
+//    }
+//  }
+//  return voltage;
 //}
 
-void manageGarden(){ 
-  unsigned int humidity = dht.readHumidity();
+unsigned int readLipoVoltage(){
+  HTTP http(BAUD_RATE, RX_PIN, TX_PIN, RST_PIN, DEBUG);
+  unsigned int voltage = 0;
+  for (unsigned int i=0; i<10; ++i){
+    unsigned int cv = http.readVoltage();
+    if (cv > voltage){
+      voltage = cv;
+    }
+  }
+  return voltage;
+}
+
+void sleep(){
+  while (elapsedTime <= timeToSleep){ 
+    LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+    elapsedTime += 7000;
+  }
+}
+
+unsigned int availableMemory(){
+  int size = 1024;
+  byte *buf;
+ 
+  while ((buf = (byte *) malloc(--size)) == NULL);
+  free(buf);
+
+  return size;
+}
+
+void uploadFile(File dataFile){
+  if (dataFile){
+    FTP ftp(BAUD_RATE, RX_PIN, TX_PIN, RST_PIN, DEBUG);
+    ftp.configureBearer(BEARER);
+
+    while (ftp.putBegin("image.jpg", FTP_SERVER, FTP_USER, FTP_PASS, "/") != SUCCESS);
+    
+    unsigned int i;
+    unsigned int chunkSize = availableMemory() - 10;
+    unsigned int writes = ceil(dataFile.size() / chunkSize);
+    char buff[chunkSize];
+    
+    while(dataFile.available()){
+      i = 0;
+      while (i < chunkSize){
+        buff[i] = dataFile.read();
+        ++i;
+      }
+      
+      ftp.putWrite(buff, i);
+      writes --;
+      
+      Serial.print(F("Pending: "));
+      Serial.print(writes);
+      Serial.print(F("/"));
+      Serial.println(ceil(dataFile.size() / chunkSize));
+    }
+
+    ftp .putEnd();
+  }
+  else {
+    Serial.println(F("Error opening the file"));
+  }
+}
+
+void postEntry(){
+  unsigned int humidity = readHumidity();
   Serial.print(F("Humidity % "));
   Serial.println(humidity);
   
-  unsigned int temperature = dht.readTemperature();
+  unsigned int temperature = readTemperature();
   Serial.print(F("Temperature Cº "));
   Serial.println(temperature);
   
@@ -108,70 +196,94 @@ void manageGarden(){
   Serial.print(F("Moisture "));
   Serial.println(moisture);
  
-  unsigned int litioBatteryVoltage = litioBattery.voltage();
+  unsigned int litioVoltage = readLitioVoltage();
   Serial.print(F("Litio voltage "));
-  Serial.println(litioBatteryVoltage);
-  
-  Serial.print(F("Water tank distance cm: "));
-  unsigned int distance = sonar.ping_cm();
-  Serial.println(distance);
+  Serial.println(litioVoltage);
+
+  unsigned int liPoVoltage = 10;//readLipoVoltage();
+  Serial.print(F("LiPo voltage "));
+  Serial.println(liPoVoltage);
+
+  /*
+  const char ENDPOINT[] = {"https://api/something"};
+  const char BODY_FORMAT[] PROGMEM = {"{\"w\":{\"m\":%d,\"t\":%d,\"h\":%d,\"mv\":%d,\"sv\":%d,\"st\":%d}}"};
 
   http.wakeUp();
-  unsigned int liPoBatteryVoltage = http.readVoltage();
-  Serial.print(F("LiPo voltage "));
-  Serial.println(liPoBatteryVoltage);
+  
+  char response[32];
+  char body[70];
+  Result result;
+  sprintf_P(body, BODY_FORMAT, 
+    moisture,
+    temperature,
+    humidity,
+    litioVoltage,
+    liPoVoltage,
+    currentState
+  );
+  Serial.println(body);
 
-  if (rightVoltage(liPoBatteryVoltage)){
-    char response[32];
-    char body[70];
-    Result result;
-    sprintf_P(body, BODY_FORMAT, moisture, temperature, humidity, litioBatteryVoltage, liPoBatteryVoltage, distance);
-    Serial.println(body);
+  http.configureBearer(BEARER);
+  http.connect();
+  result = http.post(ENDPOINT, body, response);
+  
+  http.disconnect();*/
+}
 
-    http.configureBearer(BEARER);
-    result = http.connect();
-    result = http.post(ENDPOINT, body, response);
-    http.disconnect();
-    http.sleep();
+void manageGarden(){
+  File image = SD.open("image.jpg");
+  uploadFile(image);
+  image.close();
+  while(1);
+  
+  /*if (result == SUCCESS) {
+    Serial.println(response);
+    StaticJsonBuffer<32> jsonBuffer;
+    JsonObject& root = jsonBuffer.parseObject(response);
     
-    if (result == SUCCESS) {
-      Serial.println(response);
-      StaticJsonBuffer<32> jsonBuffer;
-      JsonObject& root = jsonBuffer.parseObject(response);
-      
-      if (strcmp(root["action"], "open-valve") == 0){
-        // Delay 1 minute to overpass the irrigation time
-        unsigned long sleepTime = root["value"];
-        openValveFor(sleepTime + 60000);
-      }
-      else {
-        timeToSleep = root["value"];
-        // 26848 is the offset the arduino millis have per hour
-        timeToSleep -= 26848 * timeToSleep/(60*60*1000);
-        starToSleepTime = millis();
-      }
+    if (strcmp(root["action"], "open-valve") == 0){
+      openValve();
     }
+    else if (strcmp(root["action"], "close-valve") == 0){
+      closeValve();
+    }
+    else if (strcmp(root["action"], "reset") == 0) {
+      resetArudino();
+    }
+
+    currentState = valveIsOpen() ? OPEN_VALVE_STATE : CLOSE_VALVE_STATE;
+    timeToSleep = root["value"];
+    // 51848 is the offset the arduino millis have per hour
+    // timeToSleep -= 26848 * timeToSleep/(60*60*1000);
+    elapsedTime = 0;
+    retries = 0;
   }
   else {
-    http.sleep();
-    Serial.println(F("Low voltage detected. I can not work property, charge me!"));
-    delay(10000);
-  }
+    Serial.print(F("Error: "));
+    Serial.println(result);
+    retries += 1;
+    if (retries == MAX_RETRIES) {
+      retries = 0;
+      elapsedTime = 0;
+    }
+  }*/
 }
 
 void initialize(){
-  if (DEBUG){
-    Serial.begin(9600);
+  //if (DEBUG){
+    Serial.begin(BAUD_RATE);
     while(!Serial);
     Serial.println(F("Starting!"));
+  //}
+  
+  //litio.begin(4200, 1.0);
+  //openValveFor(0);
+
+  if (!SD.begin(SD_CS_PIN)){
+    Serial.println(F("Error starting SD"));
+    return;
   }
-  
-  delay(1000);
-  
-  openValveFor(0);
-  
-  dht.begin();
-  litioBattery.begin(5000, 1.02);
+  currentState = CLOSE_VALVE_STATE;
 }
 
 /*
@@ -185,7 +297,12 @@ void setup() {
  * the loop routine runs over and over again forever:
  */
 void loop(){
-  if (!shouldSleep()){
-    manageGarden();
-  }  
+  manageGarden();
+  sleep();
+
+  // If the module is not working properly twice the sleep time, restart it
+  if (elapsedTime >= timeToSleep*2 && timeToSleep > 0){
+    Serial.println(F("Reset!"));
+    resetArudino();
+  }
 }

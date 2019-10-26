@@ -29,67 +29,31 @@
 #define __HTTP_H__
 
 #include "Sim800.h"
+#include "Result.h"
 
-/* Result codes */
-enum Result {
-  SUCCESS = 0,
-  ERROR_INITIALIZATION = 1,
-  ERROR_BEARER_PROFILE_GPRS = 2,
-  ERROR_BEARER_PROFILE_APN = 3,
-  ERROR_OPEN_GPRS_CONTEXT = 4,
-  ERROR_QUERY_GPRS_CONTEXT = 5,
-  ERROR_CLOSE_GPRS_CONTEXT = 6,
-  ERROR_HTTP_INIT = 7,
-  ERROR_HTTP_CID = 8,
-  ERROR_HTTP_PARA = 9,
-  ERROR_HTTP_GET = 10,
-  ERROR_HTTP_READ = 11,
-  ERROR_HTTP_CLOSE = 12,
-  ERROR_HTTP_POST = 13,
-  ERROR_HTTP_DATA = 14,
-  ERROR_HTTP_CONTENT = 15,
-  ERROR_NORMAL_MODE = 16,
-  ERROR_LOW_CONSUMPTION_MODE = 17,
-  ERROR_HTTPS_ENABLE = 18,
-  ERROR_HTTPS_DISABLE = 19,
-  // FTP 
-  ERROR_FTPCID = 20,
-  ERROR_FTPSERV = 21,
-  ERROR_FTPUN = 22,
-  ERROR_FTPPW = 23,
-  ERROR_FTPPUTNAME = 24,
-  ERROR_FTPPUTPATH = 25,
-  ERROR_FTPPUT1 = 26,
-  ERROR_FTPPUT2 = 27,
-  ERROR_FTPPUT20 = 28,
-};
+class HTTP : public SIM800
+{
 
+public:
+  HTTP(unsigned int baudRate,
+       unsigned int rxPin,
+       unsigned int txPin,
+       unsigned int rstPin,
+       bool debug = TRUE) : SIM800(baudRate, rxPin, txPin, rstPin, debug){};
+  Result configureBearer(const char *apn);
+  Result connect();
+  Result disconnect();
+  Result get(const char *uri, char *response);
+  Result post(const char *uri, const char *body, char *response);
+  void sleep(bool force = FALSE);
+  void wakeUp();
+  unsigned int readVoltage();
+  unsigned int readVoltagePercentage();
+  unsigned int readSignalStrength();
 
-class HTTP : public SIM800 {
-
-  public:
-    HTTP(unsigned int baudRate, unsigned int rxPin, unsigned int txPin, unsigned int rstPin, bool debug = TRUE):SIM800(baudRate, rxPin, txPin, rstPin, debug){};
-    Result configureBearer(const char *apn);
-    Result connect();
-    Result disconnect();
-    Result get(const char *uri, char *response);
-    Result post(const char *uri, const char *body, char *response);
-    Result putBegin(const char *fileName, 
-                      const char *server, 
-                      const char *usr, 
-                      const char *pass,
-                      const char *path = "/");
-    Result putWrite(const char *data, unsigned int size);
-    Result putEnd();
-    void sleep(bool force = FALSE);
-    void wakeUp();
-    unsigned int readVoltage();
-    unsigned int readVoltagePercentage();
-    unsigned int readSignalStrength();
-
-  private:
-    void readResponse(char *response);
-    Result setHTTPSession(const char *uri);
+private:
+  void readResponse(char *response);
+  Result setHTTPSession(const char *uri);
 };
 
 #endif

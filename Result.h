@@ -1,6 +1,6 @@
 /*
- * Parser.cpp
- * Parser module to deal with parsing
+ * Result.h
+ * Result codes used by the librart
  *
  * Copyright 2019 Antonio Carrasco
  *
@@ -25,50 +25,41 @@
  * THE SOFTWARE.
  */
 
-#include "Parser.h"
-#include <string.h>
+#ifndef __RESULT_H_
+#define __RESULT_H_
 
-void parseATResponse(const char *buffer, unsigned int size, unsigned int offset, char *response)
+/* Result codes */
+enum Result
 {
-  const char *twoPointsPointer = strchr(buffer, ':');
-  unsigned int twoPointsIndex = (int)(twoPointsPointer - buffer);
-  unsigned int valueStartIndex = twoPointsIndex + offset;
-  for (int i = valueStartIndex; i < valueStartIndex + size; ++i)
-  {
-    response[i - valueStartIndex] = buffer[i];
-    response[i - valueStartIndex + 1] = '\0';
-  }
-}
+  SUCCESS = 0,
+  ERROR_INITIALIZATION = 1,
+  ERROR_BEARER_PROFILE_GPRS = 2,
+  ERROR_BEARER_PROFILE_APN = 3,
+  ERROR_OPEN_GPRS_CONTEXT = 4,
+  ERROR_QUERY_GPRS_CONTEXT = 5,
+  ERROR_CLOSE_GPRS_CONTEXT = 6,
+  ERROR_HTTP_INIT = 7,
+  ERROR_HTTP_CID = 8,
+  ERROR_HTTP_PARA = 9,
+  ERROR_HTTP_GET = 10,
+  ERROR_HTTP_READ = 11,
+  ERROR_HTTP_CLOSE = 12,
+  ERROR_HTTP_POST = 13,
+  ERROR_HTTP_DATA = 14,
+  ERROR_HTTP_CONTENT = 15,
+  ERROR_NORMAL_MODE = 16,
+  ERROR_LOW_CONSUMPTION_MODE = 17,
+  ERROR_HTTPS_ENABLE = 18,
+  ERROR_HTTPS_DISABLE = 19,
+  ERROR_FTPCID = 20,
+  ERROR_FTPSERV = 21,
+  ERROR_FTPUN = 22,
+  ERROR_FTPPW = 23,
+  ERROR_FTPPUTNAME = 24,
+  ERROR_FTPPUTPATH = 25,
+  ERROR_FTPPUT1 = 26,
+  ERROR_FTPPUT2 = 27,
+  ERROR_FTPPUT20 = 28
+};
 
-void parseJSONResponse(const char *buffer, unsigned int bufferSize, char *response)
-{
-  int start_index = 0;
-  int i = 0;
-  while (i < bufferSize - 1 && start_index == 0)
-  {
-    char c = buffer[i];
-    if ('{' == c)
-    {
-      start_index = i;
-    }
-    ++i;
-  }
-
-  int end_index = 0;
-  int j = bufferSize - 1;
-  while (j >= 0 && end_index == 0)
-  {
-    char c = buffer[j];
-    if ('}' == c)
-    {
-      end_index = j;
-    }
-    --j;
-  }
-
-  for (int k = 0; k < (end_index - start_index) + 2; ++k)
-  {
-    response[k] = buffer[start_index + k];
-    response[k + 1] = '\0';
-  }
-}
+#endif
