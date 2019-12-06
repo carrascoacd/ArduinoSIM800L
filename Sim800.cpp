@@ -28,6 +28,11 @@
 
 #include "Sim800.h"
 
+const char SLEEP_MODE_2[] PROGMEM = "AT+CSCLK=2\r\n";
+const char SLEEP_MODE_1[] PROGMEM = "AT+CSCLK=1\r\n";
+const char SLEEP_MODE_0[] PROGMEM = "AT+CSCLK=0\r\n";
+const char OK[] PROGMEM = "OK";
+
 int SIM800::preInit(void)
 {
     pinMode(resetPin, OUTPUT);
@@ -149,14 +154,14 @@ int SIM800::sendCmdAndWaitForResp(const char *cmd, const char *resp, unsigned ti
     return waitForResp(resp, timeout);
 }
 
-int SIM800::sendCmdAndWaitForResp2(const char *cmd, const char *resp, unsigned timeout)
+int SIM800::sendCmdAndWaitForResp_P(const char *cmd, const char *resp, unsigned timeout)
 {
-    char cmdBuff[120];
+    char cmdBuff[128]; // TODO check if I can reduce this to 64
     char respBuff[32];
     strcpy_P(cmdBuff, cmd);
     strcpy_P(respBuff, resp);
-    sendCmd(cmdBuff);
-    return waitForResp(respBuff, timeout);
+    
+    return sendCmdAndWaitForResp(cmdBuff, respBuff, timeout);
 }
 
 void SIM800::serialDebug(void)
@@ -190,4 +195,22 @@ void SIM800::write(const char *data, unsigned int size)
 {
     serialSIM800.listen();
     serialSIM800.write(data, size);
+}
+
+void SIM800::sleep(bool force)
+{
+    char buffer[16];
+    if (force)
+    {
+        sendCmdAndWaitForResp_P(SLEEP_MODE_1, OK, 2000);
+    }
+    else
+    {
+        sendCmdAndWaitForResp_P(buffer, OK, 2000);
+    }
+}
+
+void SIM800::wakeUp()
+{
+  preInit();
 }

@@ -48,6 +48,10 @@ public:
                   const char *path = "/");
   Result putWrite(const char *data, unsigned int size);
   Result putEnd();
+
+private:
+  Result putWriteStart(unsigned int size);
+  Result putWriteEnd(const char *data, unsigned int size);
 };
 
 #endif

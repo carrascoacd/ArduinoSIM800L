@@ -45,8 +45,6 @@ public:
   Result disconnect();
   Result get(const char *uri, char *response);
   Result post(const char *uri, const char *body, char *response);
-  void sleep(bool force = FALSE);
-  void wakeUp();
   unsigned int readVoltage();
   unsigned int readVoltagePercentage();
   unsigned int readSignalStrength();

@@ -79,6 +79,7 @@ Result FTP::configureBearer(const char *apn)
       preInit();
     }
   }
+  attempts = 0;
 
   strcpy_P(buffer, BEARER_PROFILE_GPRS);
   strcpy_P(resp1, OK);
@@ -90,6 +91,30 @@ Result FTP::configureBearer(const char *apn)
   if (sendCmdAndWaitForResp(buffer, resp1, 2000) == FALSE)
     result = ERROR_BEARER_PROFILE_APN;
 
+  strcpy_P(buffer, QUERY_BEARER);
+  strcpy_P(resp1, BEARER_OPEN);
+  while (sendCmdAndWaitForResp(buffer, resp1, 2000) == FALSE && attempts < MAX_ATTEMPTS)
+  {
+    attempts++;
+    if (attempts == MAX_ATTEMPTS)
+    {
+      result = ERROR_OPEN_GPRS_CONTEXT;
+    }
+  }
+
+  attempts = 0;
+
+  strcpy_P(buffer, OPEN_GPRS_CONTEXT);
+  strcpy_P(resp1, OK);
+  while (sendCmdAndWaitForResp(buffer, resp1, 2000) == FALSE && attempts < MAX_ATTEMPTS)
+  {
+    attempts++;
+    if (attempts == MAX_ATTEMPTS)
+    {
+      result = ERROR_QUERY_GPRS_CONTEXT;
+    }
+  }
+
   return result;
 }
 
@@ -99,13 +124,10 @@ Result FTP::putBegin(const char *fileName,
                      const char *pass,
                      const char *path)
 {
-  Result result;
+  Result result = SUCCESS;
 
   char buffer[64];
   char resp[12];
-
-  //sendCmdAndWaitForResp("AT+FTPSSL=1\r\n", "OK", 2000);
-  //sendCmdAndWaitForResp("AT+SSLOPT=1,1\r\n", "OK", 2000);
 
   delay(10000);
   strcpy_P(buffer, AT_FTPCID);
@@ -162,7 +184,26 @@ Result FTP::putBegin(const char *fileName,
 
 Result FTP::putWrite(const char *data, unsigned int size)
 {
-  Result result;
+  Result result = SUCCESS;
+
+  unsigned int attempts = 0;
+  unsigned int MAX_ATTEMPTS = 10;
+
+  while (putWriteStart(size) != SUCCESS || putWriteEnd(data, size) != SUCCESS)
+  {
+    attempts++;
+    if (attempts == MAX_ATTEMPTS)
+    {
+      return ERROR_FTPPUT11;
+    }
+  }
+
+  return result;
+}
+
+Result FTP::putWriteStart(unsigned int size)
+{
+  Result result = SUCCESS;
 
   char buffer[32];
   char resp[32];
@@ -173,12 +214,23 @@ Result FTP::putWrite(const char *data, unsigned int size)
   {
     return ERROR_FTPPUT2;
   }
-  else
-  {
-    write(data, size);
 
-    strcpy_P(resp, AT_FTPPUT1_RESP);
-    waitForResp(resp, 2000);
+  return result;
+}
+
+Result FTP::putWriteEnd(const char *data, unsigned int size)
+{
+  Result result = SUCCESS;
+
+  char buffer[32];
+  char resp[32];
+
+  write(data, size);
+
+  strcpy_P(resp, AT_FTPPUT1_RESP);
+  if (waitForResp(resp, 2000) == FALSE)
+  {
+    return ERROR_FTPPUT11;
   }
 
   return result;
@@ -186,7 +238,7 @@ Result FTP::putWrite(const char *data, unsigned int size)
 
 Result FTP::putEnd()
 {
-  Result result;
+  Result result = SUCCESS;
   serialSIM800.flush();
 
   char buffer[32];

@@ -1,6 +1,6 @@
 /*
  * Result.h
- * Result codes used by the librart
+ * Result codes used by the library
  *
  * Copyright 2019 Antonio Carrasco
  *
@@ -59,7 +59,8 @@ enum Result
   ERROR_FTPPUTPATH = 25,
   ERROR_FTPPUT1 = 26,
   ERROR_FTPPUT2 = 27,
-  ERROR_FTPPUT20 = 28
+  ERROR_FTPPUT20 = 28,
+  ERROR_FTPPUT11 = 29
 };
 
 #endif

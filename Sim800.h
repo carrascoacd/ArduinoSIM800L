@@ -112,7 +112,12 @@ public:
      *      ERROR on error
      */
     int sendCmdAndWaitForResp(const char *cmd, const char *resp, unsigned timeout);
-    int sendCmdAndWaitForResp2(const char *cmd, const char *resp, unsigned timeout);
+
+    /** 
+     *  The sendCmdAndWaitForResp_P() function is similar to sendCmdAndWaitForResp() 
+     *  except that cmd and resp are pointers to a string in program space.
+     */
+    int sendCmdAndWaitForResp_P(const char *cmd, const char *resp, unsigned timeout);
 
     /** used for serial debug, you can specify tx and rx pin and then communicate with GPRS module with common AT commands
      */
@@ -122,6 +127,9 @@ public:
 
     void write(const char *data);
     void write(const char *data, unsigned int size);
+
+    void sleep(bool force = FALSE);
+    void wakeUp();
 
 protected:
     SoftwareSerial serialSIM800;
