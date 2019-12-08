@@ -27,7 +27,6 @@
 
 #include "Geo.h"
 #include "Parser.h"
-#include <string.h>
 
 #define READ_GPS "AT+CIPGSMLOC=1,1\r\n"
 

@@ -2,7 +2,7 @@
  * Http.cpp
  * A HTTP library for the SIM800L board
  *
- * Copyright 2018 Antonio Carrasco
+ * Copyright 2019 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
@@ -28,11 +28,6 @@
 #include "Http.h"
 #include "Parser.h"
 
-const char BEARER_PROFILE_GPRS[] PROGMEM = "AT+SAPBR=3,1,\"Contype\",\"GPRS\"\r\n";
-const char BEARER_PROFILE_APN[] PROGMEM = "AT+SAPBR=3,1,\"APN\",\"%s\"\r\n";
-const char QUERY_BEARER[] PROGMEM = "AT+SAPBR=2,1\r\n";
-const char OPEN_GPRS_CONTEXT[] PROGMEM = "AT+SAPBR=1,1\r\n";
-const char CLOSE_GPRS_CONTEXT[] PROGMEM = "AT+SAPBR=0,1\r\n";
 const char HTTP_INIT[] PROGMEM = "AT+HTTPINIT\r\n";
 const char HTTP_CID[] PROGMEM = "AT+HTTPPARA=\"CID\",1\r\n";
 const char HTTP_PARA[] PROGMEM = "AT+HTTPPARA=\"URL\",\"%s\"\r\n";
@@ -45,70 +40,19 @@ const char HTTP_CONTENT[] PROGMEM = "AT+HTTPPARA=\"CONTENT\",\"application/json\
 const char HTTPS_ENABLE[] PROGMEM = "AT+HTTPSSL=1\r\n";
 const char HTTPS_DISABLE[] PROGMEM = "AT+HTTPSSL=0\r\n";
 const char NORMAL_MODE[] PROGMEM = "AT+CFUN=1,1\r\n";
-const char REGISTRATION_STATUS[] PROGMEM = "AT+CREG?\r\n";
 const char SIGNAL_QUALITY[] PROGMEM = "AT+CSQ\r\n";
 const char READ_VOLTAGE[] PROGMEM = "AT+CBC\r\n";
-const char OK[] PROGMEM = "OK\r\n";
+const char OK[] PROGMEM = "OK";
 const char DOWNLOAD[] PROGMEM = "DOWNLOAD";
 const char HTTP_2XX[] PROGMEM = ",2XX,";
 const char HTTPS_PREFIX[] PROGMEM = "https://";
-const char CONNECTED[] PROGMEM = "+CREG: 0,1";
-const char ROAMING[] PROGMEM = "+CREG: 0,5";
-const char BEARER_OPEN[] PROGMEM = "+SAPBR: 1,1";
 const char OK_[] = "OK";
 
-Result HTTP::configureBearer(const char *apn)
+#include "GPRS.h"
+
+Result HTTP::connect(const char *apn)
 {
-  Result result = SUCCESS;
-  unsigned int attempts = 0;
-  unsigned int MAX_ATTEMPTS = 10;
-
-  sendATTest();
-
-  while ((sendCmdAndWaitForResp_P(REGISTRATION_STATUS, CONNECTED, 2000) != TRUE &&
-          sendCmdAndWaitForResp_P(REGISTRATION_STATUS, ROAMING, 2000) != TRUE) &&
-         attempts < MAX_ATTEMPTS)
-  {
-    sendCmdAndWaitForResp_P(READ_VOLTAGE, OK_, 1000);
-    sendCmdAndWaitForResp_P(SIGNAL_QUALITY, OK_, 1000);
-    attempts++;
-    delay(1000 * attempts);
-    if (attempts == MAX_ATTEMPTS)
-    {
-      attempts = 0;
-      preInit();
-    }
-  }
-
-  if (sendCmdAndWaitForResp_P(BEARER_PROFILE_GPRS, OK, 2000) == FALSE)
-    result = ERROR_BEARER_PROFILE_GPRS;
-
-  char httpApn[64];
-  sprintf_P(httpApn, BEARER_PROFILE_APN, apn);
-  if (sendCmdAndWaitForResp(httpApn, OK_, 2000) == FALSE)
-    result = ERROR_BEARER_PROFILE_APN;
-
-  return result;
-}
-
-Result HTTP::connect()
-{
-  Result result = SUCCESS;
-  unsigned int attempts = 0;
-  unsigned int MAX_ATTEMPTS = 10;
-
-  while (sendCmdAndWaitForResp_P(QUERY_BEARER, BEARER_OPEN, 2000) == FALSE && attempts < MAX_ATTEMPTS)
-  {
-    attempts++;
-    if (sendCmdAndWaitForResp_P(OPEN_GPRS_CONTEXT, OK, 2000) == FALSE)
-    {
-      result = ERROR_OPEN_GPRS_CONTEXT;
-    }
-    else
-    {
-      result = SUCCESS;
-    }
-  }
+  Result result = openGPRSContext(*this, apn);
 
   if (sendCmdAndWaitForResp_P(HTTP_INIT, OK, 2000) == FALSE)
     result = ERROR_HTTP_INIT;
@@ -118,11 +62,7 @@ Result HTTP::connect()
 
 Result HTTP::disconnect()
 {
-
-  Result result = SUCCESS;
-
-  if (sendCmdAndWaitForResp_P(CLOSE_GPRS_CONTEXT, OK, 2000) == FALSE)
-    result = ERROR_CLOSE_GPRS_CONTEXT;
+  Result result = closeGPRSContext(*this);;
 
   if (sendCmdAndWaitForResp_P(HTTP_CLOSE, OK, 2000) == FALSE)
     result = ERROR_HTTP_CLOSE;
@@ -247,8 +187,7 @@ Result HTTP::setHTTPSession(const char *uri)
   if (sendCmdAndWaitForResp(buffer, OK_, 2000) == FALSE)
     result = ERROR_HTTP_PARA;
 
-  // TODO check this
-  bool https = strncmp_P(HTTPS_PREFIX, uri, strlen_P(HTTPS_PREFIX)) == 0;
+  bool https = strncmp_P(uri, HTTPS_PREFIX, strlen_P(HTTPS_PREFIX)) == 0;
   if (sendCmdAndWaitForResp_P(https ? HTTPS_ENABLE : HTTPS_DISABLE, OK, 2000) == FALSE)
   {
     result = https ? ERROR_HTTPS_ENABLE : ERROR_HTTPS_DISABLE;

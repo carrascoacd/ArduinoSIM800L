@@ -1,6 +1,6 @@
 /*
- * Ftp.h
- * FTP library for the SIM800L board
+ * GPRS.h
+ * GPRS module that implements the basic AT sequences to interact with GPRS
  *
  * Copyright 2019 Antonio Carrasco
  *
@@ -25,34 +25,13 @@
  * THE SOFTWARE.
  */
 
-#ifndef __FTP_H__
-#define __FTP_H__
+#ifndef __GPRS_H__
+#define __GPRS_H__
 
-#include "Sim800.h"
 #include "Result.h"
+#include "Sim800.h"
 
-class FTP : public SIM800
-{
-
-public:
-  FTP(unsigned int baudRate,
-      unsigned int rxPin,
-      unsigned int txPin,
-      unsigned int rstPin,
-      bool debug = TRUE) : SIM800(baudRate, rxPin, txPin, rstPin, debug){};
-
-  Result putBegin(const char *apn,
-                  const char *fileName,
-                  const char *server,
-                  const char *usr,
-                  const char *pass,
-                  const char *path = "/");
-  Result putWrite(const char *data, unsigned int size);
-  Result putEnd();
-
-private:
-  Result putWriteStart(unsigned int size);
-  Result putWriteEnd(const char *data, unsigned int size);
-};
+Result openGPRSContext(SIM800& sim800, const char *apn);
+Result closeGPRSContext(SIM800& sim800);
 
 #endif

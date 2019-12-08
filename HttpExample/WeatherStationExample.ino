@@ -176,7 +176,7 @@ void uploadFile(File dataFile){
       Serial.println(ceil(dataFile.size() / chunkSize));
     }
 
-    ftp .putEnd();
+    ftp.putEnd();
   }
   else {
     Serial.println(F("Error opening the file"));

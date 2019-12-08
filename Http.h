@@ -40,8 +40,7 @@ public:
        unsigned int txPin,
        unsigned int rstPin,
        bool debug = TRUE) : SIM800(baudRate, rxPin, txPin, rstPin, debug){};
-  Result configureBearer(const char *apn);
-  Result connect();
+  Result connect(const char *apn);
   Result disconnect();
   Result get(const char *uri, char *response);
   Result post(const char *uri, const char *body, char *response);
