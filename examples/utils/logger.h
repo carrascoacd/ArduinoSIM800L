@@ -8,7 +8,7 @@
 
 const char LOG_INT[] PROGMEM = "%d";
 
-void info(const char *message, bool newLine = TRUE)
+void info(const char *message, bool newLine = true)
 {
   File file = SD.open(LOG_FILE, FILE_WRITE);
   if (file)
@@ -19,12 +19,18 @@ void info(const char *message, bool newLine = TRUE)
   newLine ? Serial.println(message) : Serial.print(message);
 }
 
-void info(const __FlashStringHelper *message, bool newLine = TRUE)
+void info(const __FlashStringHelper *message, bool newLine = true)
 {
-  return info((const char *)message, newLine);
+  File file = SD.open(LOG_FILE, FILE_WRITE);
+  if (file)
+  {
+    newLine ? file.println(message) : file.print(message);
+    file.close();
+  }
+  newLine ? Serial.println(message) : Serial.print(message);
 }
 
-void info(long message, bool newLine = TRUE)
+void info(long message, bool newLine = true)
 {
   char buffer[10];
   // Use sprintf instead of overrided Serial.print in order to
