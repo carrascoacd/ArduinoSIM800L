@@ -42,6 +42,7 @@ const char HTTPS_DISABLE[] PROGMEM = "AT+HTTPSSL=0\r\n";
 const char NORMAL_MODE[] PROGMEM = "AT+CFUN=1,1\r\n";
 const char SIGNAL_QUALITY[] PROGMEM = "AT+CSQ\r\n";
 const char READ_VOLTAGE[] PROGMEM = "AT+CBC\r\n";
+
 const char OK[] PROGMEM = "OK";
 const char DOWNLOAD[] PROGMEM = "DOWNLOAD";
 const char HTTP_2XX[] PROGMEM = ",2XX,";
@@ -52,7 +53,7 @@ const char OK_[] = "OK";
 
 Result HTTP::connect(const char *apn)
 {
-  Result result = openGPRSContext(*this, apn);
+  Result result = openGPRSContext(this, apn);
 
   if (sendCmdAndWaitForResp_P(HTTP_INIT, OK, 2000) == FALSE)
     result = ERROR_HTTP_INIT;
@@ -62,7 +63,7 @@ Result HTTP::connect(const char *apn)
 
 Result HTTP::disconnect()
 {
-  Result result = closeGPRSContext(*this);;
+  Result result = closeGPRSContext(this);
 
   if (sendCmdAndWaitForResp_P(HTTP_CLOSE, OK, 2000) == FALSE)
     result = ERROR_HTTP_CLOSE;
@@ -109,7 +110,7 @@ Result HTTP::get(const char *uri, char *response)
   Result result = setHTTPSession(uri);
   char buffer[16];
   char resp[16];
-  
+
   if (sendCmdAndWaitForResp_P(HTTP_GET, HTTP_2XX, 2000) == TRUE)
   {
     strcpy_P(buffer, HTTP_READ);

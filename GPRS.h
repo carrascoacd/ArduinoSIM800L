@@ -31,7 +31,7 @@
 #include "Result.h"
 #include "Sim800.h"
 
-Result openGPRSContext(SIM800& sim800, const char *apn);
-Result closeGPRSContext(SIM800& sim800);
+Result openGPRSContext(SIM800 *sim800, const char *apn);
+Result closeGPRSContext(SIM800 *sim800);
 
 #endif

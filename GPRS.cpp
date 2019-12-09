@@ -44,43 +44,43 @@ const char BEARER_OPEN[] PROGMEM = "+SAPBR: 1,1";
 const char OK[] PROGMEM = "OK";
 const char OK_ PROGMEM = "OK";
 
-Result openGPRSContext(SIM800& sim800, const char *apn)
+Result openGPRSContext(SIM800 *sim800, const char *apn)
 {
   Result result = SUCCESS;
   uint8_t attempts = 0;
   uint8_t MAX_ATTEMPTS = 10;
 
-  sim800.sendATTest();
+  sim800->sendATTest();
 
-  while ((sim800.sendCmdAndWaitForResp_P(REGISTRATION_STATUS, CONNECTED, 2000) != TRUE &&
-          sim800.sendCmdAndWaitForResp_P(REGISTRATION_STATUS, ROAMING, 2000) != TRUE) &&
+  while ((sim800->sendCmdAndWaitForResp_P(REGISTRATION_STATUS, CONNECTED, 2000) != TRUE &&
+          sim800->sendCmdAndWaitForResp_P(REGISTRATION_STATUS, ROAMING, 2000) != TRUE) &&
          attempts < MAX_ATTEMPTS)
   {
-    sim800.sendCmdAndWaitForResp_P(READ_VOLTAGE, OK, 1000);
-    sim800.sendCmdAndWaitForResp_P(SIGNAL_QUALITY, OK, 1000);
+    sim800->sendCmdAndWaitForResp_P(READ_VOLTAGE, OK, 1000);
+    sim800->sendCmdAndWaitForResp_P(SIGNAL_QUALITY, OK, 1000);
     attempts++;
     delay(1000 * attempts);
     if (attempts == MAX_ATTEMPTS)
     {
       attempts = 0;
-      sim800.preInit();
+      sim800->preInit();
     }
   }
 
-  if (sim800.sendCmdAndWaitForResp_P(BEARER_PROFILE_GPRS, OK, 2000) == FALSE)
+  if (sim800->sendCmdAndWaitForResp_P(BEARER_PROFILE_GPRS, OK, 2000) == FALSE)
     result = ERROR_BEARER_PROFILE_GPRS;
 
   char httpApn[64];
   char tmp[24];
   strcpy_P(tmp, apn);
   sprintf_P(httpApn, BEARER_PROFILE_APN, tmp);
-  if (sim800.sendCmdAndWaitForResp(httpApn, OK_, 2000) == FALSE)
+  if (sim800->sendCmdAndWaitForResp(httpApn, OK_, 2000) == FALSE)
     result = ERROR_BEARER_PROFILE_APN;
 
-  while (sim800.sendCmdAndWaitForResp_P(QUERY_BEARER, BEARER_OPEN, 2000) == FALSE && attempts < MAX_ATTEMPTS)
+  while (sim800->sendCmdAndWaitForResp_P(QUERY_BEARER, BEARER_OPEN, 2000) == FALSE && attempts < MAX_ATTEMPTS)
   {
     attempts++;
-    if (sim800.sendCmdAndWaitForResp_P(OPEN_GPRS_CONTEXT, OK, 2000) == FALSE)
+    if (sim800->sendCmdAndWaitForResp_P(OPEN_GPRS_CONTEXT, OK, 2000) == FALSE)
     {
       result = ERROR_OPEN_GPRS_CONTEXT;
     }
@@ -93,11 +93,11 @@ Result openGPRSContext(SIM800& sim800, const char *apn)
   return result;
 }
 
-Result closeGPRSContext(SIM800& sim800)
+Result closeGPRSContext(SIM800 *sim800)
 {
   Result result = SUCCESS;
 
-  if (sim800.sendCmdAndWaitForResp_P(CLOSE_GPRS_CONTEXT, OK, 2000) == FALSE)
+  if (sim800->sendCmdAndWaitForResp_P(CLOSE_GPRS_CONTEXT, OK, 2000) == FALSE)
     result = ERROR_CLOSE_GPRS_CONTEXT;
 
   return result;

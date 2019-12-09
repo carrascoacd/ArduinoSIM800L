@@ -62,54 +62,40 @@ Result FTP::putBegin(const char *apn,
                      const char *pass,
                      const char *path)
 {
-  Result result = openGPRSContext(*this, apn);
+  Result result = openGPRSContext(this, apn);
 
   char buffer[64];
   char tmp[24];
 
   delay(10000);
   if (sendCmdAndWaitForResp_P(AT_FTPCID, OK, 2000) == FALSE)
-  {
     return ERROR_FTPCID;
-  }
 
   strcpy_P(tmp, server);
   sprintf_P(buffer, AT_FTPSERV, tmp);
   if (sendCmdAndWaitForResp(buffer, OK, 2000) == FALSE)
-  {
     return ERROR_FTPSERV;
-  }
 
   strcpy_P(tmp, usr);
   sprintf_P(buffer, AT_FTPUN, tmp);
   if (sendCmdAndWaitForResp(buffer, OK_, 2000) == FALSE)
-  {
     return ERROR_FTPUN;
-  }
 
   strcpy_P(tmp, pass);
   sprintf_P(buffer, AT_FTPPW, tmp);
   if (sendCmdAndWaitForResp(buffer, OK_, 2000) == FALSE)
-  {
     return ERROR_FTPPW;
-  }
 
   sprintf_P(buffer, AT_FTPPUTNAME, fileName);
   if (sendCmdAndWaitForResp(buffer, OK_, 2000) == FALSE)
-  {
     return ERROR_FTPPUTNAME;
-  }
 
   sprintf_P(buffer, AT_FTPPUTPATH, path);
   if (sendCmdAndWaitForResp(buffer, OK_, 2000) == FALSE)
-  {
     return ERROR_FTPPUTPATH;
-  }
 
   if (sendCmdAndWaitForResp_P(AT_FTPPUT1, AT_FTPPUT1_RESP, 10000) == FALSE)
-  {
     return ERROR_FTPPUT1;
-  }
 
   return result;
 }
@@ -125,9 +111,7 @@ Result FTP::putWrite(const char *data, unsigned int size)
   {
     attempts++;
     if (attempts == MAX_ATTEMPTS)
-    {
       return ERROR_FTPPUT11;
-    }
   }
 
   return result;
@@ -137,15 +121,13 @@ Result FTP::putWriteStart(unsigned int size)
 {
   Result result = SUCCESS;
 
-  char buffer[32];
-  char resp[32];
+  char buffer[22];
+  char resp[11];
 
   sprintf_P(buffer, AT_FTPPUT2, size);
   strcpy_P(resp, AT_FTPPUT2_RESP);
   if (sendCmdAndWaitForResp(buffer, resp, 2000) == FALSE)
-  {
     return ERROR_FTPPUT2;
-  }
 
   return result;
 }
@@ -153,26 +135,23 @@ Result FTP::putWriteStart(unsigned int size)
 Result FTP::putWriteEnd(const char *data, unsigned int size)
 {
   Result result = SUCCESS;
-  char resp[8];
+  char resp[4];
 
   write(data, size);
-  
+
   strcpy_P(resp, AT_FTPPUT1_RESP);
   if (waitForResp(resp, 2000) == FALSE)
-  {
     return ERROR_FTPPUT11;
-  }
 
   return result;
 }
 
 Result FTP::putEnd()
 {
-  Result result = closeGPRSContext(*this);
+  Result result = closeGPRSContext(this);
 
   if (sendCmdAndWaitForResp_P(AT_FTPPUT20, AT_FTPPUT20_RESP, 2000) == FALSE)
-  {
     return ERROR_FTPPUT20;
-  }
+
   return result;
 }

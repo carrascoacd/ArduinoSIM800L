@@ -124,6 +124,7 @@ int SIM800::waitForResp(const char *resp, unsigned int timeout)
             char c = serialSIM800.read();
             if (debugMode)
                 Serial.print(c);
+                    
             sum = (c == resp[sum] || resp[sum] == 'X') ? sum + 1 : 0;
             if (sum == len)
                 break;
@@ -160,7 +161,7 @@ int SIM800::sendCmdAndWaitForResp_P(const char *cmd, const char *resp, unsigned 
     char respBuff[32];
     strcpy_P(cmdBuff, cmd);
     strcpy_P(respBuff, resp);
-    
+
     return sendCmdAndWaitForResp(cmdBuff, respBuff, timeout);
 }
 
@@ -199,18 +200,17 @@ void SIM800::write(const char *data, unsigned int size)
 
 void SIM800::sleep(bool force)
 {
-    char buffer[16];
     if (force)
     {
         sendCmdAndWaitForResp_P(SLEEP_MODE_1, OK, 2000);
     }
     else
     {
-        sendCmdAndWaitForResp_P(buffer, OK, 2000);
+        sendCmdAndWaitForResp_P(SLEEP_MODE_2, OK, 2000);
     }
 }
 
 void SIM800::wakeUp()
 {
-  preInit();
+    preInit();
 }

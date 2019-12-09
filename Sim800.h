@@ -29,7 +29,7 @@
 #ifndef __SIM800_H__
 #define __SIM800_H__
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include <SoftwareSerial.h>
 
 #define TRUE 1
@@ -39,6 +39,7 @@
 /** SIM800 class.
  *  Used for SIM800 communication. attention that SIM800 module communicate with MCU in serial protocol
  */
+
 class SIM800
 {
 
@@ -47,8 +48,13 @@ public:
      *  @param baudRate baud rate of uart communication
      *  @param rxPin uart receive pin to communicate with SIM800
      *  @param txPin uart transmit pin to communicate with SIM800
+     *  @param debug indicates if print the AT command sequence
      */
-    SIM800(unsigned int baudRate, unsigned int rxPin, unsigned int txPin, unsigned int rstPin, bool debug) : serialSIM800(txPin, rxPin)
+    SIM800(unsigned int baudRate,
+           unsigned int rxPin,
+           unsigned int txPin,
+           unsigned int rstPin,
+           bool debug) : serialSIM800(txPin, rxPin)
     {
         serialSIM800.begin(baudRate);
         debugMode = debug;
