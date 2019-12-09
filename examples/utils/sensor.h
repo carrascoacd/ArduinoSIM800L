@@ -8,28 +8,23 @@
 #define MOISTURE_PIN 1
 #define DHTTYPE DHT11
 
+DHT dht(TEMPERATURE_HUMIDITY_PIN, DHTTYPE);
+
 unsigned int readHumidity()
 {
-  DHT dht(TEMPERATURE_HUMIDITY_PIN, DHTTYPE);
   dht.begin();
   return dht.readHumidity();
 }
 
 unsigned int readTemperature()
 {
-  DHT dht(TEMPERATURE_HUMIDITY_PIN, DHTTYPE);
   dht.begin();
   return dht.readTemperature();
 }
 
 unsigned int readMoisture()
 {
-  unsigned long total = 0;
-  for (unsigned int i = 0; i < 100; ++i)
-  {
-    total += analogRead(MOISTURE_PIN);
-  }
-  return total / 100;
+  return 0;
 }
 
 unsigned int readLitioVoltage()

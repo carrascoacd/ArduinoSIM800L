@@ -2,6 +2,7 @@
 #define __ARDUCAM_H__
 
 #include <Wire.h>
+#include <SPI.h>
 #include <ArduCAM.h>
 
 #define FRAMES_NUM 0x00
@@ -15,7 +16,6 @@ void buildImageName(char *filename, uint8_t currentImage) {
 
   sprintf_P(filename, IMG_NAME, currentImage);
   while (SD.exists(filename)) {
-    currentImage ++;
     sprintf_P(filename, IMG_NAME, currentImage);
   }
 }
@@ -39,19 +39,22 @@ bool takePicture(const char *imageName)
   myCAM.clear_fifo_flag();
   myCAM.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
 
+  // Low power mode OFF
+  myCAM.clear_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
+
   myCAM.flush_fifo();
   myCAM.clear_fifo_flag();
   myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);
 
   //Start capture
   myCAM.start_capture();
-  info(F("Start capture"), TRUE);
+  info(F("Start capture"));
 
   uint8_t temp = 0, temp_last = 0;
   uint32_t length = 0;
   int i = 0;
   File outFile;
-  unsigned int bufSize = 8;
+  uint8_t bufSize = 8;
   byte buf[bufSize];
   bool isHeader = false;
   bool imageTook = false;
@@ -64,17 +67,17 @@ bool takePicture(const char *imageName)
   i = 0;
 
   length = myCAM.read_fifo_length();
-  info(F("The fifo length is:"));
+  info(F("The fifo length is:"), FALSE);
   info(length, TRUE);
 
   if (length >= MAX_FIFO_SIZE) //8M
   {
-    info("Over size.", TRUE);
+    info("Over size.");
     return 0;
   }
   if (length == 0) //0 kb
   {
-    info(F("Size is 0."), TRUE);
+    info(F("Size is 0."));
     return 0;
   }
   myCAM.CS_LOW();
@@ -93,7 +96,11 @@ bool takePicture(const char *imageName)
       outFile.write(buf, i);
       //Close the file
       outFile.close();
-      info(F("Capture Done!!"), TRUE);
+      info(F("Capture Done!!"));
+
+      // Low power mode ON
+      myCAM.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
+      
       isHeader = false;
       myCAM.CS_LOW();
       myCAM.set_fifo_burst();
@@ -124,9 +131,12 @@ bool takePicture(const char *imageName)
       outFile = SD.open(imageName, O_WRITE | O_CREAT | O_TRUNC);
       if (!outFile)
       {
-        info(F("File open failed: "));
-        info(imageName, TRUE);
-        return;
+        info(F("CAM. File open failed: "), FALSE);
+        info(imageName);
+
+        // Low power mode ON
+        myCAM.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
+        return imageTook;
       }
       myCAM.CS_LOW();
       myCAM.set_fifo_burst();

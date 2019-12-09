@@ -24,21 +24,14 @@ void moveValve(byte value)
 
 void openValve()
 {
-  info(F("Open valve"), TRUE);
+  info(F("Open valve"));
   moveValve(HIGH);
 }
 
 void closeValve()
 {
-  info(F("Close Valve"), TRUE);
+  info(F("Close Valve"));
   moveValve(LOW);
-}
-
-void openValveFor(unsigned long milliseconds)
-{
-  openValve();
-  delay(milliseconds);
-  closeValve();
 }
 
 #endif __VALVE_H__

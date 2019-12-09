@@ -4,48 +4,33 @@
 #include <SD.h>
 #include <Arduino.h>
 
-void info(const __FlashStringHelper *message, bool newLine = TRUE)
+#define LOG_FILE "l"
+
+const char LOG_INT[] PROGMEM = "%d";
+
+void info(const char *message, bool newLine = TRUE)
 {
-  File file = SD.open("l", FILE_WRITE);
+  File file = SD.open(LOG_FILE, FILE_WRITE);
   if (file)
   {
     newLine ? file.println(message) : file.print(message);
     file.close();
   }
   newLine ? Serial.println(message) : Serial.print(message);
+}
+
+void info(const __FlashStringHelper *message, bool newLine = TRUE)
+{
+  return info((const char *)message, newLine);
 }
 
 void info(long message, bool newLine = TRUE)
 {
-  File file = SD.open("l", FILE_WRITE);
-  if (file)
-  {
-    newLine ? file.println(message) : file.print(message);
-    file.close();
-  }
-  newLine ? Serial.println(message) : Serial.print(message);
-}
-
-void info(char message)
-{
-  File file = SD.open("l", FILE_WRITE);
-  if (file)
-  {
-    file.print(message);
-    file.close();
-  }
-  Serial.print(message);
-}
-
-void info(const char *message, bool newLine = TRUE)
-{
-  File file = SD.open("l", FILE_WRITE);
-  if (file)
-  {
-    newLine ? file.println(message) : file.print(message);
-    file.close();
-  }
-  newLine ? Serial.println(message) : Serial.print(message);
+  char buffer[10];
+  // Use sprintf instead of overrided Serial.print in order to
+  // save space
+  sprintf_P(buffer, LOG_INT, message);
+  return info(buffer, newLine);
 }
 
 #endif __LOGGER_H__
