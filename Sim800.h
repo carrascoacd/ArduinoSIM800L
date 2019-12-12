@@ -36,6 +36,9 @@
 #define FALSE 0
 #define DEFAULT_TIMEOUT 5000
 
+// Comment or uncomment this to debug the library
+#define DEBUG true
+
 /** SIM800 class.
  *  Used for SIM800 communication. attention that SIM800 module communicate with MCU in serial protocol
  */
@@ -48,16 +51,13 @@ public:
      *  @param baudRate baud rate of uart communication
      *  @param rxPin uart receive pin to communicate with SIM800
      *  @param txPin uart transmit pin to communicate with SIM800
-     *  @param debug indicates if print the AT command sequence
      */
     SIM800(unsigned int baudRate,
            unsigned int rxPin,
            unsigned int txPin,
-           unsigned int rstPin,
-           bool debug) : serialSIM800(txPin, rxPin)
+           unsigned int rstPin) : serialSIM800(txPin, rxPin)
     {
         serialSIM800.begin(baudRate);
-        debugMode = debug;
         resetPin = rstPin;
     };
 
@@ -139,7 +139,6 @@ public:
 
 protected:
     SoftwareSerial serialSIM800;
-    bool debugMode;
     unsigned int resetPin;
 };
 

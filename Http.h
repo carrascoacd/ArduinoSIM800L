@@ -38,8 +38,7 @@ public:
   HTTP(unsigned int baudRate,
        unsigned int rxPin,
        unsigned int txPin,
-       unsigned int rstPin,
-       bool debug = TRUE) : SIM800(baudRate, rxPin, txPin, rstPin, debug){};
+       unsigned int rstPin) : SIM800(baudRate, rxPin, txPin, rstPin){};
   Result connect(const char *apn);
   Result disconnect();
   Result get(const char *uri, char *response);

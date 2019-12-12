@@ -122,9 +122,11 @@ int SIM800::waitForResp(const char *resp, unsigned int timeout)
         if (serialSIM800.available())
         {
             char c = serialSIM800.read();
-            if (debugMode)
-                Serial.print(c);
-                    
+            
+            #ifdef DEBUG
+              Serial.print(c);
+            #endif
+                
             sum = (c == resp[sum] || resp[sum] == 'X') ? sum + 1 : 0;
             if (sum == len)
                 break;
@@ -157,7 +159,7 @@ int SIM800::sendCmdAndWaitForResp(const char *cmd, const char *resp, unsigned ti
 
 int SIM800::sendCmdAndWaitForResp_P(const char *cmd, const char *resp, unsigned timeout)
 {
-    char cmdBuff[128]; // TODO check if I can reduce this to 64
+    char cmdBuff[128];
     char respBuff[32];
     strcpy_P(cmdBuff, cmd);
     strcpy_P(respBuff, resp);

@@ -38,8 +38,7 @@ public:
   FTP(unsigned int baudRate,
       unsigned int rxPin,
       unsigned int txPin,
-      unsigned int rstPin,
-      bool debug = TRUE) : SIM800(baudRate, rxPin, txPin, rstPin, debug){};
+      unsigned int rstPin) : SIM800(baudRate, rxPin, txPin, rstPin){};
 
   Result putBegin(const char *apn,
                   const char *fileName,
