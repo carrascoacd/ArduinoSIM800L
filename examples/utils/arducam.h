@@ -4,6 +4,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <ArduCAM.h>
+#include <SD.h>
 
 #define FRAMES_NUM 0x00
 #define CAM_CS 5
@@ -15,9 +16,7 @@ void buildImageName(char *filename, uint8_t currentImage) {
   // It iterates til we reach a non existent image in order to not override it
 
   sprintf_P(filename, IMG_NAME, currentImage);
-  while (SD.exists(filename)) {
-    sprintf_P(filename, IMG_NAME, currentImage);
-  }
+  currentImage ++;
 }
 
 bool takePicture(const char *imageName)
