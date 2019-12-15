@@ -1,6 +1,6 @@
 
 # Arduino SIM800L library
-A smart HTTP library based on Seeeduino that implements the AT HTTP commands to perform GET and POST requests to a JSON API as well as FTP uploads.
+A smart HTTP & FTP library based on Seeeduino that implements the AT HTTP commands to perform GET and POST requests to a JSON API as well as FTP uploads.
 
 ## Support
 * Your board has to support the standard SoftwareSerial library. It doesn't work with HardwareSerial based boards for the moment.
