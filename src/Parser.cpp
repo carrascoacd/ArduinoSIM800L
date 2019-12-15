@@ -1,6 +1,6 @@
 /*
- * Geo.h
- * A Geolocalization library for the SIM800L board
+ * Parser.cpp
+ * Parser module to deal with parsing
  *
  * Copyright 2019 Antonio Carrasco
  *
@@ -25,17 +25,50 @@
  * THE SOFTWARE.
  */
 
+#include "Parser.h"
+#include <string.h>
 
-#ifndef __GEO_H__
-#define __GEO_H__
+void parseATResponse(const char *buffer, unsigned int size, unsigned int offset, char *response)
+{
+  const char *twoPointsPointer = strchr(buffer, ':');
+  unsigned int twoPointsIndex = (int)(twoPointsPointer - buffer);
+  unsigned int valueStartIndex = twoPointsIndex + offset;
+  for (int i = valueStartIndex; i < valueStartIndex + size; ++i)
+  {
+    response[i - valueStartIndex] = buffer[i];
+    response[i - valueStartIndex + 1] = '\0';
+  }
+}
 
-#include "Sim800.h"
+void parseJSONResponse(const char *buffer, unsigned int bufferSize, char *response)
+{
+  int start_index = 0;
+  int i = 0;
+  while (i < bufferSize - 1 && start_index == 0)
+  {
+    char c = buffer[i];
+    if ('{' == c)
+    {
+      start_index = i;
+    }
+    ++i;
+  }
 
-class Geo : public SIM800 {
+  int end_index = 0;
+  int j = bufferSize - 1;
+  while (j >= 0 && end_index == 0)
+  {
+    char c = buffer[j];
+    if ('}' == c)
+    {
+      end_index = j;
+    }
+    --j;
+  }
 
-  public:
-    Geo(unsigned int baudRate, unsigned int rxPin, unsigned int txPin, unsigned int rstPin, bool debug = TRUE):SIM800(baudRate, rxPin, txPin, rstPin, debug){};
-    void readGpsLocation(char *gps);
-};
-
-#endif
+  for (int k = 0; k < (end_index - start_index) + 2; ++k)
+  {
+    response[k] = buffer[start_index + k];
+    response[k + 1] = '\0';
+  }
+}

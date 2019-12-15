@@ -29,17 +29,20 @@
 #ifndef __SIM800_H__
 #define __SIM800_H__
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include <SoftwareSerial.h>
 
-#define TRUE                    1
-#define FALSE                   0
-#define DEFAULT_TIMEOUT         5000
+#define TRUE 1
+#define FALSE 0
+#define DEFAULT_TIMEOUT 5000
 
+// Comment or uncomment this to debug the library
+#define DEBUG true
 
 /** SIM800 class.
  *  Used for SIM800 communication. attention that SIM800 module communicate with MCU in serial protocol
  */
+
 class SIM800
 {
 
@@ -49,9 +52,12 @@ public:
      *  @param rxPin uart receive pin to communicate with SIM800
      *  @param txPin uart transmit pin to communicate with SIM800
      */
-    SIM800(unsigned int baudRate, unsigned int rxPin, unsigned int txPin, unsigned int rstPin, bool debug):serialSIM800(txPin, rxPin) {
+    SIM800(unsigned int baudRate,
+           unsigned int rxPin,
+           unsigned int txPin,
+           unsigned int rstPin) : serialSIM800(txPin, rxPin)
+    {
         serialSIM800.begin(baudRate);
-        debugMode = debug;
         resetPin = rstPin;
     };
 
@@ -71,19 +77,18 @@ public:
      *      TRUE on success
      *      ERROR on error
      */
-    int readBuffer(char* buffer,int count, unsigned int timeOut = DEFAULT_TIMEOUT);
-
+    int readBuffer(char *buffer, int count, unsigned int timeOut = DEFAULT_TIMEOUT);
 
     /** clean Buffer
      *  @param buffer   buffer to clean
      *  @param count    number of bytes to clean
      */
-    void cleanBuffer(char* buffer, int count);
+    void cleanBuffer(char *buffer, int count);
 
     /** send AT command to SIM800 module
      *  @param cmd  command array which will be send to GPRS module
      */
-    void sendCmd(const char* cmd);
+    void sendCmd(const char *cmd);
 
     /**send "AT" to SIM800 module
      */
@@ -102,7 +107,7 @@ public:
      *      TRUE on success
      *      ERROR on error
      */
-    int waitForResp(const char* resp, unsigned timeout);
+    int waitForResp(const char *resp, unsigned timeout);
 
     /** send AT command to GPRS module and wait for correct response
      *  @param  *cmd    AT command which will be send to GPRS module
@@ -112,8 +117,13 @@ public:
      *      TRUE on success
      *      ERROR on error
      */
-    int sendCmdAndWaitForResp(const char* cmd, const char *resp, unsigned timeout);
+    int sendCmdAndWaitForResp(const char *cmd, const char *resp, unsigned timeout);
 
+    /** 
+     *  The sendCmdAndWaitForResp_P() function is similar to sendCmdAndWaitForResp() 
+     *  except that cmd and resp are pointers to a string in program space.
+     */
+    int sendCmdAndWaitForResp_P(const char *cmd, const char *resp, unsigned timeout);
 
     /** used for serial debug, you can specify tx and rx pin and then communicate with GPRS module with common AT commands
      */
@@ -121,12 +131,15 @@ public:
 
     void purgeSerial();
 
-private:
+    void write(const char *data);
+    void write(const char *data, unsigned int size);
 
+    void sleep(bool force = FALSE);
+    void wakeUp();
+
+protected:
     SoftwareSerial serialSIM800;
-    bool debugMode;
     unsigned int resetPin;
-
 };
 
 #endif

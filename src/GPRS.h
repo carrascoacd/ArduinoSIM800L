@@ -1,6 +1,6 @@
 /*
- * Geo.cpp
- * Geo library for the SIM800L board
+ * GPRS.h
+ * GPRS module that implements the basic AT sequences to interact with GPRS
  *
  * Copyright 2019 Antonio Carrasco
  *
@@ -25,20 +25,13 @@
  * THE SOFTWARE.
  */
 
-#include "Geo.h"
-#include "Parser.h"
-#include <string.h>
+#ifndef __GPRS_H__
+#define __GPRS_H__
 
-#define READ_GPS "AT+CIPGSMLOC=1,1\r\n"
+#include "Result.h"
+#include "Sim800.h"
 
-void Geo::readGpsLocation(char *gps){
-  char buffer[80];
-  cleanBuffer(buffer, sizeof(buffer));
-  cleanBuffer(gps, sizeof(gps));
+Result openGPRSContext(SIM800 *sim800, const char *apn);
+Result closeGPRSContext(SIM800 *sim800);
 
-  sendCmd(READ_GPS);
-
-  if (readBuffer(buffer, sizeof(buffer)) == TRUE){
-    parseATResponse(buffer, 19, 4, gps);
-  }
-}
+#endif
