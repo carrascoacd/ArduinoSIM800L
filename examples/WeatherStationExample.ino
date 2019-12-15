@@ -5,10 +5,10 @@
 #include <Http.h>
 #include <Ftp.h>
 
-#include "examples/utils/logger.h"
-#include "examples/utils/valve.h"
-#include "examples/utils/sensor.h"
-#include "examples/utils/arducam.h"
+#include "../examples/utils/logger.h"
+#include "../examples/utils/valve.h"
+#include "../examples/utils/sensor.h"
+#include "../examples/utils/arducam.h"
 
 #define SD_CS_PIN 3
 #define RST_PIN 8
