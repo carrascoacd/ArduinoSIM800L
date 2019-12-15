@@ -1,6 +1,6 @@
 
 # Arduino SIM800L library
-A smart HTTP library based on Seeeduino that implements the AT HTTP commands to perform GET and POST requests to a JSON API.
+A smart HTTP library based on Seeeduino that implements the AT HTTP commands to perform GET and POST requests to a JSON API as well as FTP uploads.
 
 ## Support
 * Your board has to support the standard SoftwareSerial library. It doesn't work with HardwareSerial based boards for the moment.
@@ -8,19 +8,21 @@ A smart HTTP library based on Seeeduino that implements the AT HTTP commands to 
 * The library has been tested against Arduino Uno and Arduino Nano.
 
 ## Instalation
-Download the library and then import it.
+Download the ZIP library and then import it: Sketch -> Include Library -> Add .ZIP Library ...
 
 ## Quick start!
 
-Here's some code to perform a GET request! :+1:
+How to do a GET request! :+1:
 
 ``` c++
 unsigned int RX_PIN = 7;
 unsigned int TX_PIN = 8;
 unsigned int RST_PIN = 12;
+
+const char BEARER[] PROGMEM = "gprs-service.com";
+
 HTTP http(9600, RX_PIN, TX_PIN, RST_PIN);
-http.configureBearer("your.mobile.service.provider.apn");
-http.connect();
+http.connect("your.mobile.service.provider.apn");
 
 char response[256];
 Result result = http.get("your.api.com", response);
@@ -31,15 +33,16 @@ http.disconnect();
 
 ```
 
-Here's some code to perform a POST request! :+1:
+How to do a POST request! :+1:
 
 ``` c++
 unsigned int RX_PIN = 7;
 unsigned int TX_PIN = 8;
 unsigned int RST_PIN = 12;
+const char BEARER[] PROGMEM = "gprs-service.com";
+
 HTTP http(9600, RX_PIN, TX_PIN, RST_PIN);
-http.configureBearer("your.mobile.service.provider.apn");
-http.connect();
+http.connect(BEARER);
 
 char response[256];
 Result result = http.post("your.api.com", "{\"date\":\"12345678\"}", response);
@@ -49,10 +52,27 @@ Serial.println(response);
 http.disconnect();
 ```
 
+How to do a FTP upload! :+1:
+
+``` c++
+unsigned int RX_PIN = 7;
+unsigned int TX_PIN = 8;
+unsigned int RST_PIN = 12;
+const char BEARER[] PROGMEM = "gprs-service.com";
+const char FTP_SERVER[] PROGMEM = "ftp.server";
+const char FTP_USER[] PROGMEM = "user";
+const char FTP_PASS[] PROGMEM = "pass";
+
+FTP ftp(9600, RX_PIN, TX_PIN, RST_PIN);
+ftp.putBegin(BEARER, "example.txt", FTP_SERVER, FTP_USER, FTP_PASS);
+ftp.putWrite("hello!", sizeof("hello!"));
+ftp.putEnd();
+
+```
+
 I suggest the [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) library for parsing the JSON response, then you can play with the values easily.
 
-
-## How it works?
+## HTTP. How it works?
 In order to perform a request, the library follows these steps:
 
 ##### Configure Bearer:

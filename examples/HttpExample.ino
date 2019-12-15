@@ -1,81 +1,64 @@
 #include <ArduinoJson.h>
 #include <Http.h>
 
-unsigned long lastRunTime = 0;
-unsigned long waitForRunTime = 0;
+#define RST_PIN 8
+#define RX_PIN 10
+#define TX_PIN 9
 
-unsigned int RX_PIN = 7;
-unsigned int TX_PIN = 8;
-unsigned int RST_PIN = 12;
-HTTP http(9600, RX_PIN, TX_PIN, RST_PIN);
+const char BEARER[] PROGMEM = "your.mobile.service.provider.apn";
 
 // the setup routine runs once when you press reset:
-void setup() {
+void setup()
+{
   Serial.begin(9600);
-  while(!Serial);
+  while (!Serial)
+    ;
   Serial.println("Starting!");
 }
 
 // the loop routine runs over and over again forever:
-void loop() {
-  if (shouldTrackTimeEntry()) trackTimeEntry();
-}
+void loop()
+{
+  HTTP http(9600, RX_PIN, TX_PIN, RST_PIN);
 
-// functions
-void print(const __FlashStringHelper *message, int code = -1){
-  if (code != -1){
-    Serial.print(message);
-    Serial.println(code);
-  }
-  else {
-    Serial.println(message);
-  }
-}
-
-bool shouldTrackTimeEntry(){
-  // This calculation uses the max value the unsigned long can store as key. Remember when a negative number 
-  // is assigned or the maximun is exceeded, then the module is applied to that value.
-  unsigned long elapsedTime = millis() - lastRunTime;
-  print(F("Elapsed time: "), elapsedTime);
-  return elapsedTime >= waitForRunTime;
-}
-
-void trackTimeEntry(){
-  
   char response[32];
   char body[90];
   Result result;
 
-  print(F("Cofigure bearer: "), http.configureBearer("movistar.es"));
-  result = http.connect();
-  print(F("HTTP connect: "), result);
+  // Notice the bearer must be a pointer to the PROGMEM
+  result = http.connect(BEARER);
+  Serial.print(F("HTTP connect: "));
+  Serial.println(result);
 
-  sprintf(body, "{\"name\": \"%s\"}", "Arduino");
-  result = http.post("your.domain/api/devices", body, response);
-  print(F("HTTP POST: "), result);
-  if (result == SUCCESS) {
+  sprintf(body, "{\"title\": \"%s\", \"body\": \"%s\", \"user_id\": \"%d\"}", "Arduino", "Test", 1);
+  result = http.post("https://your.api", body, response);
+  Serial.print(F("HTTP POST: "));
+  Serial.println(result);
+  if (result == SUCCESS)
+  {
     Serial.println(response);
-    StaticJsonBuffer<32> jsonBuffer;
-    JsonObject& root = jsonBuffer.parseObject(response);
-    lastRunTime = millis();
-    waitForRunTime = root["waitForRunTime"];
-    
-    print(F("Last run time: "), lastRunTime);
-    print(F("Next post in: "), waitForRunTime);
+    StaticJsonBuffer<64> jsonBuffer;
+    JsonObject &root = jsonBuffer.parseObject(response);
+
+    const char *id = root[F("id")];
+    Serial.print(F("ID: "));
+    Serial.println(id);
   }
 
-  result = http.get("your.domain/api/timing", response);
-  print(F("HTTP GET: "), result);
-  if (result == SUCCESS) {
+  result = http.get("https://your.api", response);
+  Serial.print(F("HTTP GET: "));
+  Serial.println(result);
+  if (result == SUCCESS)
+  {
     Serial.println(response);
-    StaticJsonBuffer<32> jsonBuffer;
-    JsonObject& root = jsonBuffer.parseObject(response);
-    lastRunTime = millis();
-    waitForRunTime = root["waitForRunTime"];
-    
-    print(F("Last run time: "), lastRunTime);
-    print(F("Next post in: "), waitForRunTime);
+    StaticJsonBuffer<64> jsonBuffer;
+    JsonObject &root = jsonBuffer.parseObject(response);
+
+    const char *id = root[F("id")];
+    Serial.print(F("ID: "));
+    Serial.println(id);
   }
-  
-  print(F("HTTP disconnect: "), http.disconnect());
+
+  Serial.print(F("HTTP disconnect: "));
+  Serial.print(http.disconnect());
 }

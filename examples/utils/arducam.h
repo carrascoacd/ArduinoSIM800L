@@ -12,11 +12,7 @@
 const char IMG_NAME[] PROGMEM = "%d.jpg";
 
 void buildImageName(char *filename, uint8_t currentImage) {
-  // Open the new file if not exists. currentImage is 0 when the int has overflow, since it start at 1.
-  // It iterates til we reach a non existent image in order to not override it
-
   sprintf_P(filename, IMG_NAME, currentImage);
-  currentImage ++;
 }
 
 bool takePicture(const char *imageName)

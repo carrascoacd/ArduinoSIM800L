@@ -1,8 +1,9 @@
 #include <ArduinoJson.h>
-#include <Http.h>
-#include <Ftp.h>
 #include <LowPower.h>
 #include <SD.h>
+
+#include <Http.h>
+#include <Ftp.h>
 
 #include "examples/utils/logger.h"
 #include "examples/utils/valve.h"
@@ -10,11 +11,9 @@
 #include "examples/utils/arducam.h"
 
 #define SD_CS_PIN 3
-
 #define RST_PIN 8
 #define RX_PIN 10
 #define TX_PIN 9
-#define DEBUG true
 
 #define BAUD_RATE 19200
 #define MAX_RETRIES 10
@@ -22,12 +21,12 @@
 #define CLOSE_VALVE_STATE 0
 #define OPEN_VALVE_STATE 1
 
-const char BEARER[] PROGMEM = "";
-const char FTP_SERVER[] PROGMEM = "";
-const char FTP_USER[] PROGMEM = "";
-const char FTP_PASS[] PROGMEM = "";
+const char BEARER[] PROGMEM = "your.bearer";
+const char FTP_SERVER[] PROGMEM = "ftp.server";
+const char FTP_USER[] PROGMEM = "user";
+const char FTP_PASS[] PROGMEM = "pass";
 const char BODY_FORMAT[] PROGMEM = "{\"w\":{\"m\":%d,\"t\":%d,\"h\":%d,\"mv\":%d,\"sv\":%d,\"st\":%d}}";
-const char ENDPOINT[] PROGMEM = "";
+const char ENDPOINT[] PROGMEM = "https://your.api.com";
 const char OPEN_VALVE[] PROGMEM = "open-valve";
 const char CLOSE_VALVE[] PROGMEM = "close-valve";
 const char RESET[] PROGMEM = "reset";
@@ -47,7 +46,7 @@ void(*reset) (void) = 0;
 void resetArudino(){
   info(F("Reset!"));
   delay(1000);
-  resetArudino();
+  reset();
 }
 
 void sleep() {
@@ -58,7 +57,8 @@ void sleep() {
 }
 
 unsigned int readLipoVoltage() {
-  HTTP http(BAUD_RATE, RX_PIN, TX_PIN, RST_PIN, DEBUG);
+  HTTP http(BAUD_RATE, RX_PIN, TX_PIN, RST_PIN);
+  http.wakeUp();
   unsigned int voltage = 0;
   for (unsigned int i = 0; i < 10; ++i) {
     unsigned int cv = http.readVoltage();
@@ -66,6 +66,7 @@ unsigned int readLipoVoltage() {
       voltage = cv;
     }
   }
+  http.sleep();
   return voltage;
 }
 
@@ -83,7 +84,7 @@ void uploadFile(const char *filename) {
   File dataFile = SD.open(filename);
 
   if (dataFile) {
-    FTP ftp(BAUD_RATE, RX_PIN, TX_PIN, RST_PIN, DEBUG);
+    FTP ftp(BAUD_RATE, RX_PIN, TX_PIN, RST_PIN);
     ftp.wakeUp();
     ftp.putBegin(BEARER, filename, FTP_SERVER, FTP_USER, FTP_PASS);
 
@@ -121,14 +122,14 @@ void uploadFile(const char *filename) {
 }
 
 Result postEntry(char *response) {
+  info(F("SRAM: "), false);  
+  info(availableMemory(), true);
+  
   unsigned int temperature = readTemperature();
   unsigned int humidity = readHumidity();
   unsigned int moisture = readMoisture();
   unsigned int litioVoltage = readLitioVoltage();
   unsigned int liPoVoltage = readLipoVoltage();
-
-  info(F("SRAM: "), false);  
-  info(availableMemory(), true);
 
   char body[70];
   Result result;
@@ -145,7 +146,7 @@ Result postEntry(char *response) {
   strcpy_P(endpoint, ENDPOINT);
   info(endpoint);
   
-  HTTP http(BAUD_RATE, RX_PIN, TX_PIN, RST_PIN, DEBUG);
+  HTTP http(BAUD_RATE, RX_PIN, TX_PIN, RST_PIN);
   http.wakeUp();
   http.connect(BEARER);
   result = http.post(endpoint, body, response);
@@ -157,6 +158,8 @@ Result postEntry(char *response) {
 
 void manageGarden() {
   char buff[32];
+  buildImageName(buff, currentImage);
+  Serial.println(buff);
   Result result = postEntry(buff);
   
   if (result == SUCCESS) {
@@ -182,8 +185,8 @@ void manageGarden() {
 
     buildImageName(buff, currentImage);
     if (takePicture(buff)){
-      currentImage++;
       uploadFile(buff);
+      currentImage++;
     }
   }
   else {
@@ -213,8 +216,9 @@ void setup() {
   currentState = CLOSE_VALVE_STATE;
 
   info(F("Starting!"));
-  openValve();
-  closeValve();
+
+  //openValve();
+  //closeValve();
 }
 
 /*
