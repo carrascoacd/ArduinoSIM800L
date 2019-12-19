@@ -22,7 +22,7 @@ unsigned int RST_PIN = 12;
 const char BEARER[] PROGMEM = "gprs-service.com";
 
 HTTP http(9600, RX_PIN, TX_PIN, RST_PIN);
-http.connect("your.mobile.service.provider.apn");
+http.connect(BEARER);
 
 char response[256];
 Result result = http.get("your.api.com", response);
