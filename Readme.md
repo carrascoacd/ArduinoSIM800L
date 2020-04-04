@@ -1,4 +1,6 @@
 
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=58Y36H29935PW&item_name=Support+me+to+continue+developing+features&currency_code=EUR&source=url)
+
 # Arduino SIM800L library
 A smart HTTP & FTP library based on Seeeduino that implements the AT HTTP commands to perform GET and POST requests to a JSON API as well as FTP uploads.
 
@@ -112,3 +114,10 @@ In order to perform a request, the library follows these steps:
 
 - Support of HardwareSerial.
 - Support of more content types, not only JSON (application/json).
+
+
+## Development
+- Lint
+```
+cppcheck --enable=all .
+```
