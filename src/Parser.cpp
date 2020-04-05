@@ -33,7 +33,7 @@ void parseATResponse(const char *buffer, unsigned int size, unsigned int offset,
   const char *twoPointsPointer = strchr(buffer, ':');
   unsigned int twoPointsIndex = (int)(twoPointsPointer - buffer);
   unsigned int valueStartIndex = twoPointsIndex + offset;
-  for (int i = valueStartIndex; i < valueStartIndex + size; ++i)
+  for (unsigned int i = valueStartIndex; i < valueStartIndex + size; ++i)
   {
     response[i - valueStartIndex] = buffer[i];
     response[i - valueStartIndex + 1] = '\0';
@@ -42,8 +42,8 @@ void parseATResponse(const char *buffer, unsigned int size, unsigned int offset,
 
 void parseJSONResponse(const char *buffer, unsigned int bufferSize, char *response)
 {
-  int start_index = 0;
-  int i = 0;
+  unsigned int start_index = 0;
+  unsigned int i = 0;
   while (i < bufferSize - 1 && start_index == 0)
   {
     char c = buffer[i];
@@ -54,7 +54,7 @@ void parseJSONResponse(const char *buffer, unsigned int bufferSize, char *respon
     ++i;
   }
 
-  int end_index = 0;
+  unsigned int end_index = 0;
   int j = bufferSize - 1;
   while (j >= 0 && end_index == 0)
   {

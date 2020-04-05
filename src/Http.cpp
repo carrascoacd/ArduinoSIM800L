@@ -73,18 +73,17 @@ Result HTTP::disconnect()
 
 Result HTTP::post(const char *uri, const char *body, char *response)
 {
-
-  Result result = setHTTPSession(uri);
+  Result result;
+  setHTTPSession(uri);
+  
   char buffer[32];
   char resp[16];
 
   unsigned int delayToDownload = 10000;
   sprintf_P(buffer, HTTP_DATA, strlen(body), delayToDownload);
   strcpy_P(resp, DOWNLOAD);
-  if (sendCmdAndWaitForResp(buffer, resp, 2000) == FALSE)
-  {
-    result = ERROR_HTTP_DATA;
-  }
+  
+  sendCmdAndWaitForResp(buffer, resp, 2000);
 
   purgeSerial();
   sendCmd(body);
@@ -106,13 +105,12 @@ Result HTTP::post(const char *uri, const char *body, char *response)
 
 Result HTTP::get(const char *uri, char *response)
 {
-
-  Result result = setHTTPSession(uri);
-  char buffer[16];
-  char resp[16];
+  Result result;
+  setHTTPSession(uri);
 
   if (sendCmdAndWaitForResp_P(HTTP_GET, HTTP_2XX, 2000) == TRUE)
   {
+    char buffer[16];
     strcpy_P(buffer, HTTP_READ);
     sendCmd(buffer);
     result = SUCCESS;
@@ -178,7 +176,7 @@ unsigned int HTTP::readSignalStrength()
 
 Result HTTP::setHTTPSession(const char *uri)
 {
-  Result result;
+  Result result = SUCCESS;
   char buffer[128];
 
   if (sendCmdAndWaitForResp_P(HTTP_CID, OK, 2000) == FALSE)

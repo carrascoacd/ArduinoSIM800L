@@ -58,8 +58,7 @@ int SIM800::checkReadable(void)
 int SIM800::readBuffer(char *buffer, int count, unsigned int timeOut)
 {
     int i = 0;
-    unsigned long timerStart, timerEnd;
-    timerStart = millis();
+    unsigned long timerStart = millis();
     while (1)
     {
         while (serialSIM800.available())
@@ -73,7 +72,8 @@ int SIM800::readBuffer(char *buffer, int count, unsigned int timeOut)
         }
         if (i > count - 1)
             break;
-        timerEnd = millis();
+
+        unsigned long timerEnd = millis();
         if (timerEnd - timerStart > timeOut)
         {
             break;
@@ -114,8 +114,7 @@ int SIM800::waitForResp(const char *resp, unsigned int timeout)
 {
     int len = strlen(resp);
     int sum = 0;
-    unsigned long timerStart, timerEnd;
-    timerStart = millis();
+    unsigned long timerStart = millis();
 
     while (1)
     {
@@ -131,7 +130,7 @@ int SIM800::waitForResp(const char *resp, unsigned int timeout)
             if (sum == len)
                 break;
         }
-        timerEnd = millis();
+        unsigned long timerEnd = millis();
         if (timerEnd - timerStart > timeout)
         {
             return FALSE;

@@ -42,7 +42,7 @@ const char CONNECTED[] PROGMEM = "+CREG: 0,1";
 const char ROAMING[] PROGMEM = "+CREG: 0,5";
 const char BEARER_OPEN[] PROGMEM = "+SAPBR: 1,1";
 const char OK[] PROGMEM = "OK";
-const char OK_ PROGMEM = "OK";
+const char OK_ = "OK";
 
 Result openGPRSContext(SIM800 *sim800, const char *apn)
 {
