@@ -30,7 +30,6 @@
 
 #include "Sim800.h"
 #include "Result.h"
-#include <SD.h>
 
 class FTP : public SIM800
 {
