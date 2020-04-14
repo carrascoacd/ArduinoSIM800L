@@ -117,7 +117,4 @@ In order to perform a request, the library follows these steps:
 
 
 ## Development
-- Lint
-```
-cppcheck --enable=all .
-```
+- Lint: `cppcheck --enable=all .`

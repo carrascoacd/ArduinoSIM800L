@@ -27,6 +27,7 @@
 
 #include "Http.h"
 #include "Parser.h"
+#include "GPRS.h"
 
 const char HTTP_INIT[] PROGMEM = "AT+HTTPINIT\r\n";
 const char HTTP_CID[] PROGMEM = "AT+HTTPPARA=\"CID\",1\r\n";
@@ -43,19 +44,18 @@ const char NORMAL_MODE[] PROGMEM = "AT+CFUN=1,1\r\n";
 const char SIGNAL_QUALITY[] PROGMEM = "AT+CSQ\r\n";
 const char READ_VOLTAGE[] PROGMEM = "AT+CBC\r\n";
 
-const char OK[] PROGMEM = "OK";
+const char AT_OK[] PROGMEM = "OK";
+const char AT_OK_[] = "OK";
 const char DOWNLOAD[] PROGMEM = "DOWNLOAD";
 const char HTTP_2XX[] PROGMEM = ",2XX,";
 const char HTTPS_PREFIX[] PROGMEM = "https://";
-const char OK_[] = "OK";
 
-#include "GPRS.h"
 
 Result HTTP::connect(const char *apn)
 {
   Result result = openGPRSContext(this, apn);
 
-  if (sendCmdAndWaitForResp_P(HTTP_INIT, OK, 2000) == FALSE)
+  if (sendCmdAndWaitForResp_P(HTTP_INIT, AT_OK, 2000) == FALSE)
     result = ERROR_HTTP_INIT;
 
   return result;
@@ -65,7 +65,7 @@ Result HTTP::disconnect()
 {
   Result result = closeGPRSContext(this);
 
-  if (sendCmdAndWaitForResp_P(HTTP_CLOSE, OK, 2000) == FALSE)
+  if (sendCmdAndWaitForResp_P(HTTP_CLOSE, AT_OK, 2000) == FALSE)
     result = ERROR_HTTP_CLOSE;
 
   return result;
@@ -132,7 +132,7 @@ unsigned int HTTP::readVoltage()
   cleanBuffer(voltage, sizeof(voltage));
 
   strcpy_P(buffer, READ_VOLTAGE);
-  sendCmd(buffer);
+  sendCmd(buffer, 500);
 
   if (readBuffer(buffer, sizeof(buffer)) == TRUE)
   {
@@ -179,20 +179,20 @@ Result HTTP::setHTTPSession(const char *uri)
   Result result = SUCCESS;
   char buffer[128];
 
-  if (sendCmdAndWaitForResp_P(HTTP_CID, OK, 2000) == FALSE)
+  if (sendCmdAndWaitForResp_P(HTTP_CID, AT_OK, 2000) == FALSE)
     result = ERROR_HTTP_CID;
 
   sprintf_P(buffer, HTTP_PARA, uri);
-  if (sendCmdAndWaitForResp(buffer, OK_, 2000) == FALSE)
+  if (sendCmdAndWaitForResp(buffer, AT_OK_, 2000) == FALSE)
     result = ERROR_HTTP_PARA;
 
   bool https = strncmp_P(uri, HTTPS_PREFIX, strlen_P(HTTPS_PREFIX)) == 0;
-  if (sendCmdAndWaitForResp_P(https ? HTTPS_ENABLE : HTTPS_DISABLE, OK, 2000) == FALSE)
+  if (sendCmdAndWaitForResp_P(https ? HTTPS_ENABLE : HTTPS_DISABLE, AT_OK, 2000) == FALSE)
   {
     result = https ? ERROR_HTTPS_ENABLE : ERROR_HTTPS_DISABLE;
   }
 
-  if (sendCmdAndWaitForResp_P(HTTP_CONTENT, OK, 2000) == FALSE)
+  if (sendCmdAndWaitForResp_P(HTTP_CONTENT, AT_OK, 2000) == FALSE)
     result = ERROR_HTTP_CONTENT;
 
   return result;
