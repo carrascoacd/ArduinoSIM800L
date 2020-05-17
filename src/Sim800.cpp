@@ -32,8 +32,6 @@ const char SLEEP_MODE_2[] PROGMEM = "AT+CSCLK=2\r\n";
 const char SLEEP_MODE_1[] PROGMEM = "AT+CSCLK=1\r\n";
 const char SLEEP_MODE_0[] PROGMEM = "AT+CSCLK=0\r\n";
 const char AT_OK[] PROGMEM = "OK";
-const char AT[] PROGMEM = "AT\r\n";
-const char POWER_DOWN[] PROGMEM = "AT+CPOWD=0\r\n";
 
 
 int SIM800::preInit(void)
@@ -49,8 +47,6 @@ int SIM800::preInit(void)
 
     purgeSerial();
     serialSIM800.flush();
-
-    sendATTest();
 
     return TRUE;
 }
@@ -208,7 +204,7 @@ void SIM800::write(const uint8_t *data, unsigned int size){
     serialSIM800.write(data, size);
 }
 
-int SIM800::sleep(bool force)
+void SIM800::sleep(bool force)
 {
     if (force)
     {

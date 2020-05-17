@@ -136,7 +136,7 @@ public:
     void write(const char *data, unsigned int size);
     void write(const uint8_t *data, unsigned int size);
 
-    int sleep(bool force = FALSE);
+    void sleep(bool force = FALSE);
     void wakeUp();
 
 protected:
