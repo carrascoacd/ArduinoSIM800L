@@ -36,22 +36,11 @@ const char AT_FTPPUTPATH[] PROGMEM = "AT+FTPPUTPATH=\"%s\"\r\n";
 const char AT_FTPPUT1[] PROGMEM = "AT+FTPPUT=1\r\n";
 const char AT_FTPPUT2[] PROGMEM = "AT+FTPPUT=2,%d\r\n";
 const char AT_FTPPUT20[] PROGMEM = "AT+FTPPUT=2,0\r\n";
-const char BEARER_PROFILE_GPRS[] PROGMEM = "AT+SAPBR=3,1,\"Contype\",\"GPRS\"\r\n";
-const char BEARER_PROFILE_APN[] PROGMEM = "AT+SAPBR=3,1,\"APN\",\"%s\"\r\n";
-const char QUERY_BEARER[] PROGMEM = "AT+SAPBR=2,1\r\n";
-const char OPEN_GPRS_CONTEXT[] PROGMEM = "AT+SAPBR=1,1\r\n";
-const char CLOSE_GPRS_CONTEXT[] PROGMEM = "AT+SAPBR=0,1\r\n";
-const char REGISTRATION_STATUS[] PROGMEM = "AT+CREG?\r\n";
-const char SLEEP_MODE_2[] PROGMEM = "AT+CSCLK=2\r\n";
-
-const char OK[] PROGMEM = "OK";
-const char OK_[] = "OK";
 const char AT_FTPPUT1_RESP[] PROGMEM = "1,1";
 const char AT_FTPPUT2_RESP[] PROGMEM = "+FTPPUT: 2";
 const char AT_FTPPUT20_RESP[] PROGMEM = "1,0";
-const char CONNECTED[] PROGMEM = "+CREG: 0,1";
-const char ROAMING[] PROGMEM = "+CREG: 0,5";
-const char BEARER_OPEN[] PROGMEM = "+SAPBR: 1,1";
+const char AT_OK[] PROGMEM = "OK";
+const char AT_OK_[] = "OK";
 
 #include "GPRS.h"
 
@@ -68,30 +57,30 @@ Result FTP::putBegin(const char *apn,
   char tmp[24];
 
   delay(10000);
-  if (sendCmdAndWaitForResp_P(AT_FTPCID, OK, 2000) == FALSE)
+  if (sendCmdAndWaitForResp_P(AT_FTPCID, AT_OK, 2000) == FALSE)
     return ERROR_FTPCID;
 
   strcpy_P(tmp, server);
   sprintf_P(buffer, AT_FTPSERV, tmp);
-  if (sendCmdAndWaitForResp(buffer, OK, 2000) == FALSE)
+  if (sendCmdAndWaitForResp(buffer, AT_OK, 2000) == FALSE)
     return ERROR_FTPSERV;
 
   strcpy_P(tmp, usr);
   sprintf_P(buffer, AT_FTPUN, tmp);
-  if (sendCmdAndWaitForResp(buffer, OK_, 2000) == FALSE)
+  if (sendCmdAndWaitForResp(buffer, AT_OK_, 2000) == FALSE)
     return ERROR_FTPUN;
 
   strcpy_P(tmp, pass);
   sprintf_P(buffer, AT_FTPPW, tmp);
-  if (sendCmdAndWaitForResp(buffer, OK_, 2000) == FALSE)
+  if (sendCmdAndWaitForResp(buffer, AT_OK_, 2000) == FALSE)
     return ERROR_FTPPW;
 
   sprintf_P(buffer, AT_FTPPUTNAME, fileName);
-  if (sendCmdAndWaitForResp(buffer, OK_, 2000) == FALSE)
+  if (sendCmdAndWaitForResp(buffer, AT_OK_, 2000) == FALSE)
     return ERROR_FTPPUTNAME;
 
   sprintf_P(buffer, AT_FTPPUTPATH, path);
-  if (sendCmdAndWaitForResp(buffer, OK_, 2000) == FALSE)
+  if (sendCmdAndWaitForResp(buffer, AT_OK_, 2000) == FALSE)
     return ERROR_FTPPUTPATH;
 
   if (sendCmdAndWaitForResp_P(AT_FTPPUT1, AT_FTPPUT1_RESP, 10000) == FALSE)
@@ -148,10 +137,12 @@ Result FTP::putWriteEnd(const char *data, unsigned int size)
 
 Result FTP::putEnd()
 {
-  Result result = closeGPRSContext(this);
+  Result result;
 
   if (sendCmdAndWaitForResp_P(AT_FTPPUT20, AT_FTPPUT20_RESP, 2000) == FALSE)
     return ERROR_FTPPUT20;
+
+  result = closeGPRSContext(this);
 
   return result;
 }
