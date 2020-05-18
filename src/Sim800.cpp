@@ -32,7 +32,7 @@ const char SLEEP_MODE_2[] PROGMEM = "AT+CSCLK=2\r\n";
 const char SLEEP_MODE_1[] PROGMEM = "AT+CSCLK=1\r\n";
 const char SLEEP_MODE_0[] PROGMEM = "AT+CSCLK=0\r\n";
 const char AT_OK[] PROGMEM = "OK";
-
+const char AT[] PROGMEM = "AT\r\n";
 
 int SIM800::preInit(void)
 {
@@ -98,7 +98,7 @@ void SIM800::cleanBuffer(char *buffer, int count)
 
 void SIM800::sendCmd(const char *cmd, unsigned int delayBeforeSend)
 {
-    serialSIM800.listen();
+    //serialSIM800.listen();
     serialSIM800.flush();
     delay(delayBeforeSend);
     write(cmd);
@@ -197,22 +197,18 @@ void SIM800::write(const char *data)
 void SIM800::write(const char *data, unsigned int size)
 {
     //serialSIM800.listen();
-    serialSIM800.write(data, size);
-}
-
-void SIM800::write(const uint8_t *data, unsigned int size){
-    serialSIM800.write(data, size);
+    serialSIM800.write((const uint8_t*)data, size);
 }
 
 void SIM800::sleep(bool force)
 {
     if (force)
     {
-        return sendCmdAndWaitForResp_P(SLEEP_MODE_1, AT_OK, 2000);
+        sendCmdAndWaitForResp_P(SLEEP_MODE_1, AT_OK, 2000);
     }
     else
     {
-        return sendCmdAndWaitForResp_P(SLEEP_MODE_2, AT_OK, 2000);
+        sendCmdAndWaitForResp_P(SLEEP_MODE_2, AT_OK, 2000);
     }
 }
 
