@@ -12,6 +12,7 @@ DHT dht(TEMPERATURE_HUMIDITY_PIN, DHTTYPE);
 
 void initializeSensors(){
   dht.begin();
+  pinMode(MOISTURE_PIN, INPUT);
 }
 
 unsigned int readHumidity()
@@ -45,13 +46,13 @@ unsigned int readMoisture()
   /*
     Dry 676 - Wet 376
   */
-  unsigned long moisture = 0;
+  int moisture = 0;
   for (uint8_t i = 0; i <5; ++i){
-    unsigned long current = analogRead(MOISTURE_PIN);
+    int current = analogRead(MOISTURE_PIN);
     if (current > moisture) moisture = current;
     delay(250);
   }
-  return moisture;
+  return (unsigned int)moisture;
 }
 
 unsigned int readLitioVoltage()
