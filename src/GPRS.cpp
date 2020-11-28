@@ -52,12 +52,12 @@ Result openGPRSContext(SIM800 *sim800, const char *apn)
 
   sim800->sendATTest();
 
-  while ((sim800->sendCmdAndWaitForResp_P(REGISTRATION_STATUS, CONNECTED, 2000) != TRUE &&
-          sim800->sendCmdAndWaitForResp_P(REGISTRATION_STATUS, ROAMING, 2000) != TRUE) &&
+  while ((sim800->sendCmdAndWaitForResp_P(REGISTRATION_STATUS, CONNECTED, 5000) != TRUE &&
+          sim800->sendCmdAndWaitForResp_P(REGISTRATION_STATUS, ROAMING, 5000) != TRUE) &&
          attempts < MAX_ATTEMPTS)
   {
-    sim800->sendCmdAndWaitForResp_P(READ_VOLTAGE, AT_OK, 1000);
-    sim800->sendCmdAndWaitForResp_P(SIGNAL_QUALITY, AT_OK, 1000);
+    sim800->sendCmdAndWaitForResp_P(READ_VOLTAGE, AT_OK, 2000);
+    sim800->sendCmdAndWaitForResp_P(SIGNAL_QUALITY, AT_OK, 2000);
     attempts++;
     delay(1000 * attempts);
     if (attempts == MAX_ATTEMPTS)
@@ -67,20 +67,20 @@ Result openGPRSContext(SIM800 *sim800, const char *apn)
     }
   }
 
-  if (sim800->sendCmdAndWaitForResp_P(BEARER_PROFILE_GPRS, AT_OK, 2000) == FALSE)
+  if (sim800->sendCmdAndWaitForResp_P(BEARER_PROFILE_GPRS, AT_OK, 8000) == FALSE)
     result = ERROR_BEARER_PROFILE_GPRS;
 
   char httpApn[64];
   char tmp[24];
   strcpy_P(tmp, apn);
   sprintf_P(httpApn, BEARER_PROFILE_APN, tmp);
-  if (sim800->sendCmdAndWaitForResp(httpApn, AT_OK_, 2000) == FALSE)
+  if (sim800->sendCmdAndWaitForResp(httpApn, AT_OK_, 6000) == FALSE)
     result = ERROR_BEARER_PROFILE_APN;
 
-  while (sim800->sendCmdAndWaitForResp_P(QUERY_BEARER, BEARER_OPEN, 2000) == FALSE && attempts < MAX_ATTEMPTS)
+  while (sim800->sendCmdAndWaitForResp_P(QUERY_BEARER, BEARER_OPEN, 6000) == FALSE && attempts < MAX_ATTEMPTS)
   {
     attempts++;
-    if (sim800->sendCmdAndWaitForResp_P(OPEN_GPRS_CONTEXT, AT_OK, 2000) == FALSE)
+    if (sim800->sendCmdAndWaitForResp_P(OPEN_GPRS_CONTEXT, AT_OK, 6000) == FALSE)
     {
       result = ERROR_OPEN_GPRS_CONTEXT;
     }
@@ -97,7 +97,7 @@ Result closeGPRSContext(SIM800 *sim800)
 {
   Result result = SUCCESS;
 
-  if (sim800->sendCmdAndWaitForResp_P(CLOSE_GPRS_CONTEXT, AT_OK, 2000) == FALSE)
+  if (sim800->sendCmdAndWaitForResp_P(CLOSE_GPRS_CONTEXT, AT_OK, 4000) == FALSE)
     result = ERROR_CLOSE_GPRS_CONTEXT;
 
   return result;

@@ -203,11 +203,11 @@ void SIM800::sleep(bool force)
 {
     if (force)
     {
-        sendCmdAndWaitForResp_P(SLEEP_MODE_1, AT_OK, 2000);
+        sendCmdAndWaitForResp_P(SLEEP_MODE_1, AT_OK, 4000);
     }
     else
     {
-        sendCmdAndWaitForResp_P(SLEEP_MODE_2, AT_OK, 2000);
+        sendCmdAndWaitForResp_P(SLEEP_MODE_2, AT_OK, 4000);
     }
 }
 

@@ -37,7 +37,7 @@
 #define DEFAULT_TIMEOUT 5000
 
 // Comment or uncomment this to debug the library
-// #define DEBUG true
+ #define DEBUG true
 
 /** SIM800 class.
  *  Used for SIM800 communication. attention that SIM800 module communicate with MCU in serial protocol

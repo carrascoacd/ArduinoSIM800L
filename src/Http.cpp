@@ -55,7 +55,7 @@ Result HTTP::connect(const char *apn)
 {
   Result result = openGPRSContext(this, apn);
 
-  if (sendCmdAndWaitForResp_P(HTTP_INIT, AT_OK, 2000) == FALSE)
+  if (sendCmdAndWaitForResp_P(HTTP_INIT, AT_OK, 5000) == FALSE)
     result = ERROR_HTTP_INIT;
 
   return result;
@@ -65,7 +65,7 @@ Result HTTP::disconnect()
 {
   Result result = closeGPRSContext(this);
 
-  if (sendCmdAndWaitForResp_P(HTTP_CLOSE, AT_OK, 2000) == FALSE)
+  if (sendCmdAndWaitForResp_P(HTTP_CLOSE, AT_OK, 4000) == FALSE)
     result = ERROR_HTTP_CLOSE;
 
   return result;
@@ -83,7 +83,7 @@ Result HTTP::post(const char *uri, const char *body, char *response)
   sprintf_P(buffer, HTTP_DATA, strlen(body), delayToDownload);
   strcpy_P(resp, DOWNLOAD);
   
-  sendCmdAndWaitForResp(buffer, resp, 2000);
+  sendCmdAndWaitForResp(buffer, resp, 4000);
 
   purgeSerial();
   sendCmd(body);
