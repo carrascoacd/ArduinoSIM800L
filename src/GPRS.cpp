@@ -67,14 +67,14 @@ Result openGPRSContext(SIM800 *sim800, const char *apn)
     }
   }
 
-  if (sim800->sendCmdAndWaitForResp_P(BEARER_PROFILE_GPRS, AT_OK, 8000) == FALSE)
+  if (sim800->sendCmdAndWaitForResp_P(BEARER_PROFILE_GPRS, AT_OK, 10000) == FALSE)
     result = ERROR_BEARER_PROFILE_GPRS;
 
   char httpApn[64];
   char tmp[24];
   strcpy_P(tmp, apn);
   sprintf_P(httpApn, BEARER_PROFILE_APN, tmp);
-  if (sim800->sendCmdAndWaitForResp(httpApn, AT_OK_, 6000) == FALSE)
+  if (sim800->sendCmdAndWaitForResp(httpApn, AT_OK_, 8000) == FALSE)
     result = ERROR_BEARER_PROFILE_APN;
 
   while (sim800->sendCmdAndWaitForResp_P(QUERY_BEARER, BEARER_OPEN, 6000) == FALSE && attempts < MAX_ATTEMPTS)
