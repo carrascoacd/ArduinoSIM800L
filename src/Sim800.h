@@ -30,14 +30,14 @@
 #define __SIM800_H__
 
 #include <Arduino.h>
-#include <SoftwareSerial.h>
+#include <HardwareSerial.h>
 
 #define TRUE 1
 #define FALSE 0
 #define DEFAULT_TIMEOUT 5000
 
 // Comment or uncomment this to debug the library
-// #define DEBUG true
+#define DEBUG true
 
 /** SIM800 class.
  *  Used for SIM800 communication. attention that SIM800 module communicate with MCU in serial protocol
@@ -55,9 +55,9 @@ public:
     SIM800(unsigned int baudRate,
            unsigned int rxPin,
            unsigned int txPin,
-           unsigned int rstPin) : serialSIM800(txPin, rxPin)
+           unsigned int rstPin) : serialSIM800(1)
     {
-        serialSIM800.begin(baudRate);
+        serialSIM800.begin(baudRate, SERIAL_8N1, txPin, rxPin);
         resetPin = rstPin;
     };
 
@@ -139,7 +139,7 @@ public:
     void wakeUp();
 
 protected:
-    SoftwareSerial serialSIM800;
+    HardwareSerial serialSIM800;
     unsigned int resetPin;
 };
 
