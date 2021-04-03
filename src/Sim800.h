@@ -37,7 +37,7 @@
 #define DEFAULT_TIMEOUT 5000
 
 // Comment or uncomment this to debug the library
-#define DEBUG true
+// #define DEBUG true
 
 /** SIM800 class.
  *  Used for SIM800 communication. attention that SIM800 module communicate with MCU in serial protocol
@@ -87,8 +87,9 @@ public:
 
     /** send AT command to SIM800 module
      *  @param cmd  command array which will be send to GPRS module
+     *  @param delayBeforeSend  integer indicating the sime to wait before sending a command
      */
-    void sendCmd(const char *cmd);
+    void sendCmd(const char *cmd, unsigned int delayBeforeSend = 10);
 
     /**send "AT" to SIM800 module
      */

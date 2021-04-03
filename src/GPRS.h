@@ -2,7 +2,7 @@
  * GPRS.h
  * GPRS module that implements the basic AT sequences to interact with GPRS
  *
- * Copyright 2019 Antonio Carrasco
+ * Copyright 2021 Antonio Carrasco
  *
  * The MIT License (MIT)
  *

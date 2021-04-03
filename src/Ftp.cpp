@@ -2,7 +2,7 @@
  * Ftp.cpp
  * Ftp library for the SIM800L board
  *
- * Copyright 2019 Antonio Carrasco
+ * Copyright 2021 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
@@ -36,11 +36,19 @@ const char AT_FTPPUTPATH[] PROGMEM = "AT+FTPPUTPATH=\"%s\"\r\n";
 const char AT_FTPPUT1[] PROGMEM = "AT+FTPPUT=1\r\n";
 const char AT_FTPPUT2[] PROGMEM = "AT+FTPPUT=2,%d\r\n";
 const char AT_FTPPUT20[] PROGMEM = "AT+FTPPUT=2,0\r\n";
+const char BEARER_PROFILE_GPRS[] PROGMEM = "AT+SAPBR=3,1,\"Contype\",\"GPRS\"\r\n";
+const char BEARER_PROFILE_APN[] PROGMEM = "AT+SAPBR=3,1,\"APN\",\"%s\"\r\n";
+const char QUERY_BEARER[] PROGMEM = "AT+SAPBR=2,1\r\n";
+const char OPEN_GPRS_CONTEXT[] PROGMEM = "AT+SAPBR=1,1\r\n";
+const char CLOSE_GPRS_CONTEXT[] PROGMEM = "AT+SAPBR=0,1\r\n";
+const char REGISTRATION_STATUS[] PROGMEM = "AT+CREG?\r\n";
+const char SLEEP_MODE_2[] PROGMEM = "AT+CSCLK=2\r\n";
+
+const char AT_OK[] PROGMEM = "OK";
+const char AT_OK_[] = "OK";
 const char AT_FTPPUT1_RESP[] PROGMEM = "1,1";
 const char AT_FTPPUT2_RESP[] PROGMEM = "+FTPPUT: 2";
 const char AT_FTPPUT20_RESP[] PROGMEM = "1,0";
-const char AT_OK[] PROGMEM = "OK";
-const char AT_OK_[] = "OK";
 
 #include "GPRS.h"
 
@@ -62,7 +70,7 @@ Result FTP::putBegin(const char *apn,
 
   strcpy_P(tmp, server);
   sprintf_P(buffer, AT_FTPSERV, tmp);
-  if (sendCmdAndWaitForResp(buffer, AT_OK, 2000) == FALSE)
+  if (sendCmdAndWaitForResp(buffer, AT_OK_, 2000) == FALSE)
     return ERROR_FTPSERV;
 
   strcpy_P(tmp, usr);

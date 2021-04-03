@@ -2,7 +2,7 @@
  * Geo.cpp
  * Geo library for the SIM800L board
  *
- * Copyright 2019 Antonio Carrasco
+ * Copyright 2021 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
