@@ -15,8 +15,111 @@ void buildImageName(char *filename, uint8_t currentImage) {
   sprintf_P(filename, IMG_NAME, currentImage);
 }
 
-bool takePicture(const char *imageName)
+// bool takePicture(const char *imageName)
+// {
+//   // This setup is necessary for the Arducam connection
+//   SPI.begin();
+//   Wire.begin();
+
+//   // Leave some time to stabilize 
+//   delay(100);
+
+//   // Set the CS to high means this device is not selected
+//   pinMode(CAM_CS, OUTPUT);
+//   digitalWrite(CAM_CS, HIGH);
+
+//   ArduCAM myCAM(OV2640, CAM_CS);
+
+//   //Reset the CPLD
+//   myCAM.write_reg(0x07, 0x80);
+//   delay(100);
+//   myCAM.write_reg(0x07, 0x00);
+//   delay(100);
+
+//   //Change to JPEG capture mode and initialize the OV5640 module
+//   myCAM.set_format(JPEG);
+//   myCAM.InitCAM();
+//   myCAM.clear_fifo_flag();
+//   myCAM.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
+
+//   myCAM.flush_fifo();
+//   myCAM.clear_fifo_flag();
+
+//   // Sizes https://github.com/ArduCAM/Arduino/blob/78ccbb131ac17d8f59c154ce41993cd2e083440e/ArduCAM/keywords.txt#L121
+//   myCAM.OV2640_set_JPEG_size(OV2640_320x240);
+
+//   //Start capture
+//   myCAM.start_capture();
+//   info(F("Start capture"));
+
+//   uint8_t temp = 0, temp_last = 0;
+//   uint32_t length = 0;
+//   int i = 0;
+
+//   while (!myCAM.get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK) && i < 10)
+//   {
+//     ++i;
+//     delay(500);
+//   }
+//   i = 0;
+
+//   length = myCAM.read_fifo_length();
+//   info(F("The fifo length is:"), FALSE);
+//   info(length, TRUE);
+
+//   if (length >= MAX_FIFO_SIZE) //8M
+//   {
+//     info("Over size.");
+//     return false;
+//   }
+//   if (length <= 0) //0 kb
+//   {
+//     info(F("Size is 0."));
+//     return false;
+//   }
+  
+//   myCAM.CS_HIGH();
+
+//   File outFile = SD.open(imageName, O_WRITE | O_CREAT | O_TRUNC);
+//   if (!outFile)
+//   {
+//     info(F("CAM. File open failed: "), FALSE);
+//     info(imageName);
+//     return false;
+//   }
+
+//   myCAM.CS_LOW();
+
+//   //Read the first dummy byte from FIFO
+//   temp = myCAM.read_fifo();
+  
+//   //Read JPEG data from FIFO
+//   while( (temp != 0xD9) | (temp_last != 0xFF) )
+//   {
+//     temp_last = temp;
+//     //Read one byte from the image
+//     temp = myCAM.read_fifo();
+    
+//     //Write one byte from the image
+//     // myCAM.CS_HIGH();
+//     outFile.write(temp);
+//     // myCAM.CS_LOW();
+//   }
+  
+//   myCAM.CS_HIGH();
+//   outFile.close();
+  
+//   info("Finished", FALSE);
+
+//   return true;
+// }
+
+bool takePicture(const char *imageName, uint8_t quality = 0)
 {
+  // This setup is necessary for the Arducam connection
+  SPI.begin();
+  Wire.begin();
+
   pinMode(CAM_CS, OUTPUT);
   digitalWrite(CAM_CS, HIGH);
 
@@ -33,14 +136,31 @@ bool takePicture(const char *imageName)
   myCAM.InitCAM();
   myCAM.clear_fifo_flag();
   myCAM.write_reg(ARDUCHIP_FRAMES, FRAMES_NUM);
-
-  // Low power mode OFF
-  myCAM.clear_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
-
   myCAM.flush_fifo();
   myCAM.clear_fifo_flag();
-  myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);
 
+  // Sizes https://github.com/ArduCAM/Arduino/blob/78ccbb131ac17d8f59c154ce41993cd2e083440e/ArduCAM/keywords.txt#L121
+  switch(quality) {
+    case 0:
+      myCAM.OV2640_set_JPEG_size(OV2640_320x240);
+      break;
+    case 1:
+      myCAM.OV2640_set_JPEG_size(OV2640_640x480);
+      break;
+    case 2:
+      myCAM.OV2640_set_JPEG_size(OV2640_1024x768);
+      break;
+    case 3:
+      myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);
+      break;
+    default:
+      myCAM.OV2640_set_JPEG_size(OV2640_320x240);
+  }
+
+  //myCAM.OV2640_set_Light_Mode(Sunny);
+  myCAM.OV2640_set_Color_Saturation(Saturation2);
+  myCAM.OV2640_set_Contrast(Contrast2);
+  
   //Start capture
   myCAM.start_capture();
   info(F("Start capture"));
@@ -93,16 +213,14 @@ bool takePicture(const char *imageName)
       outFile.close();
       info(F("Capture Done!!"));
 
-      // Low power mode ON
-      myCAM.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
-      
       isHeader = false;
       myCAM.CS_LOW();
       myCAM.set_fifo_burst();
       i = 0;
       imageTook = TRUE;
     }
-    if (isHeader == true)
+
+    if (isHeader == true) // Write data
     {
       //Write image data to buffer if not full
       if (i < bufSize)
@@ -118,7 +236,7 @@ bool takePicture(const char *imageName)
         myCAM.set_fifo_burst();
       }
     }
-    else if ((temp == 0xD8) & (temp_last == 0xFF))
+    else if ((temp == 0xD8) & (temp_last == 0xFF)) // Start
     {
       isHeader = true;
       myCAM.CS_HIGH();
@@ -129,8 +247,6 @@ bool takePicture(const char *imageName)
         info(F("CAM. File open failed: "), FALSE);
         info(imageName);
 
-        // Low power mode ON
-        myCAM.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
         return imageTook;
       }
       myCAM.CS_LOW();

@@ -2,7 +2,7 @@
  * Ftp.cpp
  * Ftp library for the SIM800L board
  *
- * Copyright 2019 Antonio Carrasco
+ * Copyright 2021 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
@@ -49,9 +49,6 @@ const char AT_OK_[] = "OK";
 const char AT_FTPPUT1_RESP[] PROGMEM = "1,1";
 const char AT_FTPPUT2_RESP[] PROGMEM = "+FTPPUT: 2";
 const char AT_FTPPUT20_RESP[] PROGMEM = "1,0";
-const char CONNECTED[] PROGMEM = "+CREG: 0,1";
-const char ROAMING[] PROGMEM = "+CREG: 0,5";
-const char BEARER_OPEN[] PROGMEM = "+SAPBR: 1,1";
 
 #include "GPRS.h"
 
@@ -148,10 +145,12 @@ Result FTP::putWriteEnd(const char *data, unsigned int size)
 
 Result FTP::putEnd()
 {
-  Result result = closeGPRSContext(this);
+  Result result;
 
   if (sendCmdAndWaitForResp_P(AT_FTPPUT20, AT_FTPPUT20_RESP, 2000) == FALSE)
     return ERROR_FTPPUT20;
+
+  result = closeGPRSContext(this);
 
   return result;
 }

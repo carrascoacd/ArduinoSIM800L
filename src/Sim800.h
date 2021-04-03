@@ -3,7 +3,7 @@
  * A library for SeeedStudio seeeduino GPRS shield
  *
  * Original work Copyright (c) 2013 seeed technology inc. [lawliet zou]
- * Modified work Copyright 2018 Antonio Carrasco
+ * Modified work Copyright 2021 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
@@ -135,7 +135,8 @@ public:
     void write(const char *data);
     void write(const char *data, unsigned int size);
 
-    void sleep(bool force = FALSE);
+    int sleep(bool force = FALSE);
+    int powerDown();
     void wakeUp();
 
 protected:

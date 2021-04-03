@@ -10,42 +10,76 @@
 
 DHT dht(TEMPERATURE_HUMIDITY_PIN, DHTTYPE);
 
+void initializeSensors(){
+  dht.begin();
+  pinMode(MOISTURE_PIN, INPUT);
+}
+
 unsigned int readHumidity()
 {
-  dht.begin();
-  return dht.readHumidity();
+  unsigned int h = dht.readHumidity();
+  byte retry = 0;
+  while (isnan(h) && retry < 5) 
+  {
+    delay(250);
+    h = dht.readHumidity();
+    retry ++;
+  } 
+  return h;
 }
 
 unsigned int readTemperature()
 {
-  dht.begin();
-  return dht.readTemperature();
+  unsigned int t = dht.readTemperature();
+  byte retry = 0;
+  while (isnan(t) && retry < 5) 
+  {
+    delay(250);
+    t = dht.readTemperature();
+    retry ++;
+  } 
+  return t;
 }
 
 unsigned int readMoisture()
 {
   /*
-    Dry 772 - Wet 437
+    Dry 676 - Wet 376
   */
-  unsigned long moisture = 0;
-  for (uint8_t i = 0; i <100; ++i){
-    moisture += analogRead(MOISTURE_PIN);
+  int moisture = 0;
+  for (uint8_t i = 0; i <5; ++i){
+    int current = analogRead(MOISTURE_PIN);
+    if (current > moisture) moisture = current;
+    delay(250);
   }
-  return moisture/100;
+  return (unsigned int)moisture;
 }
 
 unsigned int readLitioVoltage()
 {
-  unsigned long result;
   // Read 1.1V reference against AVcc
-  ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
-  delay(2);            // Wait for Vref to settle
-  ADCSRA |= _BV(ADSC); // Convert
-  while (bit_is_set(ADCSRA, ADSC));
-  result = ADCL;
-  result |= ADCH << 8;
-  result = 1155694UL / result; // Back-calculate AVcc in mV
-  return result;
+  // set the reference to Vcc and the measurement to the internal 1.1V reference
+  #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    ADMUX = _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+     ADMUX = _BV(MUX5) | _BV(MUX0) ;
+  #else
+    ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  #endif  
+ 
+  delay(2); // Wait for Vref to settle
+  ADCSRA |= _BV(ADSC); // Start conversion
+  while (bit_is_set(ADCSRA,ADSC)); // measuring
+ 
+  uint8_t low  = ADCL; // must read ADCL first - it then locks ADCH  
+  uint8_t high = ADCH; // unlocks both
+ 
+  long result = (high<<8) | low;
+ 
+  // Taking 1.1 as Vref: Calculate Vcc (in mV); 1125300 = 1.1*1023*1000
+  // In this example I used the Vref of 1.08
+  result = 1104840 / result; 
+  return result; // Vcc in millivolts
 }
 
 #endif __SENSOR_H__

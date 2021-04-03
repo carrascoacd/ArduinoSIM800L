@@ -2,7 +2,7 @@
  * GPRS.cpp
  * GPRS module that implements the basic AT sequences to interact with GPRS
  *
- * Copyright 2019 Antonio Carrasco
+ * Copyright 2021 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
@@ -62,8 +62,11 @@ Result openGPRSContext(SIM800 *sim800, const char *apn)
     delay(1000 * attempts);
     if (attempts == MAX_ATTEMPTS)
     {
-      attempts = 0;
       sim800->preInit();
+
+      // Return in order to let the client to decide what to do instead of
+      // retrying automatically forever 
+      return ERROR_INITIALIZATION;
     }
   }
 
@@ -84,7 +87,7 @@ Result openGPRSContext(SIM800 *sim800, const char *apn)
     {
       result = ERROR_OPEN_GPRS_CONTEXT;
     }
-    else
+    else 
     {
       result = SUCCESS;
     }

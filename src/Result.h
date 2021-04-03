@@ -2,7 +2,7 @@
  * Result.h
  * Result codes used by the library
  *
- * Copyright 2019 Antonio Carrasco
+ * Copyright 2021 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
