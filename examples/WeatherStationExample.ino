@@ -83,42 +83,42 @@ unsigned int availableMemory() {
 void uploadFile(const char *filename) {
   File dataFile = SD.open(filename);
 
-  if (dataFile) {
-    FTP ftp(BAUD_RATE, RX_PIN, TX_PIN, RST_PIN);
-    ftp.wakeUp();
-    ftp.putBegin(BEARER, filename, FTP_SERVER, FTP_USER, FTP_PASS);
-
-    unsigned int i;
-    unsigned int chunkSize = 64;
-    unsigned int writes = ceil(dataFile.size() / chunkSize);
-    char buff[chunkSize];
-   
-    while (dataFile.available()) {
-      i = 0;
-      while (i < chunkSize) {
-        buff[i] = dataFile.read();
-        ++i;
-      }
-
-      if (ftp.putWrite(buff, i) != SUCCESS){
-        return;
-      }
-      writes --;
-
-      info(F("Pending: "), false);
-      info(writes, false);
-      info(F("/"), false);
-      info(ceil(dataFile.size() / chunkSize), true);
-    }
-
-    ftp.putEnd();
-    ftp.sleep();
-    dataFile.close();
-  }
-  else {
+  if (!dataFile) {
     info(F("FTP. File open failed: "));
     info(filename);
+    return;
   }
+
+  FTP ftp(BAUD_RATE, RX_PIN, TX_PIN, RST_PIN);
+  ftp.wakeUp();
+  ftp.putBegin(BEARER, filename, FTP_SERVER, FTP_USER, FTP_PASS);
+
+  unsigned int i;
+  unsigned int chunkSize = 64;
+  unsigned int writes = ceil(dataFile.size() / chunkSize);
+  char buff[chunkSize];
+
+  while (dataFile.available()) {
+    i = 0;
+    while (i < chunkSize) {
+      buff[i] = dataFile.read();
+      ++i;
+    }
+
+    if (ftp.putWrite(buff, i) != SUCCESS){
+      return;
+    }
+    writes --;
+
+    info(F("Pending: "), false);
+    info(writes, false);
+    info(F("/"), false);
+    info(ceil(dataFile.size() / chunkSize), true);
+  }
+
+  ftp.putEnd();
+  ftp.sleep();
+  dataFile.close();
 }
 
 Result postEntry(char *response) {
